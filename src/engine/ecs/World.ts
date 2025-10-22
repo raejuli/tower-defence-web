@@ -121,9 +121,13 @@ export class World {
     // Remove entities - cleanup graphics first
     for (const entity of this._entitiesToRemove) {
       // Find RenderSystem and cleanup graphics
-      const renderSystem = this._systems.find(s => s.constructor.name === 'RenderSystem') as any;
-      if (renderSystem && renderSystem.removeEntityGraphics) {
-        renderSystem.removeEntityGraphics(entity);
+      // Use type checking instead of constructor.name to avoid minification issues slightly hacky but works
+      // TODO
+      for (const system of this._systems) {
+        if ('removeEntityGraphics' in system && typeof (system as any).removeEntityGraphics === 'function') {
+          (system as any).removeEntityGraphics(entity);
+          break;
+        }
       }
       
       entity.destroy();
