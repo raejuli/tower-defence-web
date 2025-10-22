@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tower Defence - ECS Game Engine</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    #app {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+
+    #game-container {
+      position: relative;
+      display: inline-block;
+    }
+
+    canvas {
+      display: block;
+      border-radius: 10px;
+    }
+
+    #loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 24px;
+      color: white;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 20px 40px;
+      border-radius: 10px;
+    }
+
+    .info {
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 15px;
+      margin-top: 10px;
+      border-radius: 5px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .info h3 {
+      margin-bottom: 10px;
+      color: #4ade80;
+    }
+
+    .info ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .info li {
+      padding: 3px 0;
+    }
+
+    .info li:before {
+      content: "→ ";
+      color: #4ade80;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="game-container">
+      <div id="loading">Loading Game...</div>
+    </div>
+    <div class="info">
+      <h3>🎮 How to Play</h3>
+      <ul>
+        <li>Select a tower from the shop on the right (requires money)</li>
+        <li>Place it anywhere on the map (free placement - no grid!)</li>
+        <li>Green preview = valid placement, Red = invalid</li>
+        <li>Cannot place on path or on other towers</li>
+        <li>Press ESC to cancel placement</li>
+        <li>Waves start automatically after 10 seconds</li>
+        <li>Towers automatically shoot at enemies in range</li>
+        <li>Prevent enemies from reaching the end of the path</li>
+        <li>Earn money by defeating enemies</li>
+      </ul>
+      <h3 style="margin-top: 15px;">🏗️ Tower Types</h3>
+      <ul>
+        <li><span style="color: #00ff00;">■</span> Basic Tower - Balanced stats ($50)</li>
+        <li><span style="color: #0000ff;">■</span> Sniper Tower - Long range, high damage, slow fire rate ($150)</li>
+        <li><span style="color: #ffff00;">■</span> Rapid Tower - Fast fire rate, low damage, short range ($100)</li>
+      </ul>
+    </div>
+  </div>
+  
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
