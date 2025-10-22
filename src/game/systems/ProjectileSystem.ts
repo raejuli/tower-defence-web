@@ -83,7 +83,6 @@ export class ProjectileSystem extends System {
               const nextTarget = this._findNextChainTarget(projectile, chainComp);
               if (nextTarget) {
                 projComp.targetId = nextTarget.id;
-                chainComp.addHitTarget(nextTarget.id);
                 chainComp.chainCount++;
                 // Report hit but don't remove projectile
                 results.push({ 
@@ -99,7 +98,7 @@ export class ProjectileSystem extends System {
             }
           }
           
-          // Normal hit or no more chains
+          // Normal hit or no more chains - mark for removal
           results.push({ 
             projectile, 
             hit: true,
@@ -109,6 +108,7 @@ export class ProjectileSystem extends System {
             reward
           });
         } else {
+          // Hit non-enemy target - mark for removal
           results.push({ projectile, hit: true, targetDead: false, killed: false, reward: 0 });
         }
       } else {
@@ -116,6 +116,11 @@ export class ProjectileSystem extends System {
         const speed = projComp.speed * deltaTime;
         transform.x += (dx / distance) * speed;
         transform.y += (dy / distance) * speed;
+        
+        // Check if projectile has moved too far from the game area (cleanup failsafe)
+        if (transform.x < -100 || transform.x > 900 || transform.y < -100 || transform.y > 700) {
+          results.push({ projectile, hit: false, targetDead: true, killed: false, reward: 0 });
+        }
       }
     }
 

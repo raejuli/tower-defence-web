@@ -11,6 +11,8 @@ import { ProjectileSystem } from '../systems/ProjectileSystem';
 import { PathFollowingSystem } from '../systems/PathFollowingSystem';
 import { TowerSelectionSystem } from '../systems/TowerSelectionSystem';
 import { ChainLightningComponent } from '../components/ChainLightningComponent';
+import { StateMachineComponent } from '../../engine/components/StateMachineComponent';
+import { EnemyComponent } from '../components/EnemyComponent';
 import { ServiceLocator } from '../../engine/services/ServiceLocator';
 import { IEnemyService, IGameStateService } from '../services/IGameServices';
 
@@ -84,6 +86,22 @@ export class PlayingState extends State<TowerDefenceGame> {
           enemyService.onEnemyReachedEnd(result.damage);
           world.removeEntity(result.enemy);
         }
+      }
+    }
+    
+    // Check for dead enemies that need to be removed (handles stunned/slowed enemies that died)
+    const allEnemies = world.getEntitiesWithComponents(['Enemy', 'StateMachine']);
+    const enemyService = ServiceLocator.get<IEnemyService>('EnemyService');
+    
+    for (const enemy of allEnemies) {
+      const stateMachine = enemy.getComponent('StateMachine') as StateMachineComponent;
+      if (stateMachine && stateMachine.stateMachine.getCurrentStateName() === 'dead') {
+        // Enemy is in dead state, remove it
+        const enemyComp = enemy.getComponent('Enemy') as EnemyComponent;
+        if (enemyComp) {
+          enemyService.onEnemyKilled(enemyComp.stats.reward);
+        }
+        world.removeEntity(enemy);
       }
     }
     
