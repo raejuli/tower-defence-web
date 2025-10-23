@@ -23,10 +23,27 @@ export class ProjectileSystem extends System {
 
   /**
    * Process all projectiles - moves them and handles collisions
+   * Returns array of results describing what happened (NO entity removal, NO game state changes)
    */
-  public processProjectiles(deltaTime: number): Array<{projectile: Entity, hit: boolean, targetDead: boolean, target?: Entity, killed: boolean, reward: number}> {
+  public processProjectiles(deltaTime: number): Array<{
+    projectile: Entity, 
+    hit: boolean, 
+    targetDead: boolean, 
+    target?: Entity, 
+    killed: boolean, 
+    reward: number,
+    canChain: boolean
+  }> {
     const projectiles = this.getEntities();
-    const results: Array<{projectile: Entity, hit: boolean, targetDead: boolean, target?: Entity, killed: boolean, reward: number}> = [];
+    const results: Array<{
+      projectile: Entity, 
+      hit: boolean, 
+      targetDead: boolean, 
+      target?: Entity, 
+      killed: boolean, 
+      reward: number,
+      canChain: boolean
+    }> = [];
 
     for (const projectile of projectiles) {
       const projComp = projectile.getComponent('Projectile') as ProjectileComponent;
@@ -51,13 +68,13 @@ export class ProjectileSystem extends System {
           }
         }
         // No chain or no target found - mark for removal
-        results.push({ projectile, hit: false, targetDead: true, killed: false, reward: 0 });
+        results.push({ projectile, hit: false, targetDead: true, killed: false, reward: 0, canChain: false });
         continue;
       }
 
       const targetTransform = target.getComponent('Transform') as TransformComponent;
       if (!targetTransform) {
-        results.push({ projectile, hit: false, targetDead: true, killed: false, reward: 0 });
+        results.push({ projectile, hit: false, targetDead: true, killed: false, reward: 0, canChain: false });
         continue;
       }
 
@@ -84,14 +101,15 @@ export class ProjectileSystem extends System {
               if (nextTarget) {
                 projComp.targetId = nextTarget.id;
                 chainComp.chainCount++;
-                // Report hit but don't remove projectile
+                // Report hit but keep projectile alive for chain
                 results.push({ 
                   projectile, 
                   hit: true,
                   targetDead: false,
                   target,
                   killed, 
-                  reward
+                  reward,
+                  canChain: true
                 });
                 continue; // Keep projectile alive for chain
               }
@@ -105,11 +123,12 @@ export class ProjectileSystem extends System {
             targetDead: false,
             target,
             killed, 
-            reward
+            reward,
+            canChain: false
           });
         } else {
           // Hit non-enemy target - mark for removal
-          results.push({ projectile, hit: true, targetDead: false, killed: false, reward: 0 });
+          results.push({ projectile, hit: true, targetDead: false, killed: false, reward: 0, canChain: false });
         }
       } else {
         // Move towards target
@@ -119,7 +138,7 @@ export class ProjectileSystem extends System {
         
         // Check if projectile has moved too far from the game area (cleanup failsafe)
         if (transform.x < -100 || transform.x > 900 || transform.y < -100 || transform.y > 700) {
-          results.push({ projectile, hit: false, targetDead: true, killed: false, reward: 0 });
+          results.push({ projectile, hit: false, targetDead: true, killed: false, reward: 0, canChain: false });
         }
       }
     }

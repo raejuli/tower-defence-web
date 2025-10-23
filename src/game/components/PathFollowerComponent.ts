@@ -4,19 +4,14 @@
 
 import { Component } from '../../engine/ecs/Component';
 
-export interface PathPoint {
-  x: number;
-  y: number;
-}
-
 export class PathFollowerComponent extends Component {
-  public readonly path: PathPoint[];
+  public pathEntityId: number; // Reference to the path entity
   public currentIndex: number = 0;
   public readonly speed: number;
 
-  constructor(path: PathPoint[], speed: number) {
+  constructor(pathEntityId: number, speed: number) {
     super();
-    this.path = path;
+    this.pathEntityId = pathEntityId;
     this.speed = speed;
   }
 
@@ -24,26 +19,17 @@ export class PathFollowerComponent extends Component {
     return 'PathFollower';
   }
 
-  public getCurrentTarget(): PathPoint | null {
-    if (this.currentIndex >= this.path.length) {
-      return null;
-    }
-    return this.path[this.currentIndex];
-  }
-
   public nextWaypoint(): void {
     this.currentIndex++;
   }
 
-  public isAtEnd(): boolean {
-    return this.currentIndex >= this.path.length;
+  public resetToStart(): void {
+    this.currentIndex = 0;
   }
 
   public toString(): string {
-    const current = this.getCurrentTarget();
     return `Speed: ${this.speed}
-Waypoint: ${this.currentIndex}/${this.path.length}
-Current Target: ${current ? `(${current.x.toFixed(0)}, ${current.y.toFixed(0)})` : 'End Reached'}
-Path Length: ${this.path.length} points`;
+Current Waypoint: ${this.currentIndex}
+Path Entity: ${this.pathEntityId}`;
   }
 }

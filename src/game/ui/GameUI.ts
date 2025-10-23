@@ -104,7 +104,7 @@ export class GameUI extends EventEmitter {
     }]
   ]);
 
-  constructor(canvasElement: HTMLCanvasElement) {
+  constructor(canvasElement: HTMLCanvasElement, parentContainer?: HTMLElement) {
     super();
     this._canvasElement = canvasElement;
     this._container = document.createElement('div');
@@ -126,7 +126,10 @@ export class GameUI extends EventEmitter {
     });
     
     this._setupUI();
-    document.body.appendChild(this._container);
+    
+    // Append to parent container if provided, otherwise append to body
+    const parent = parentContainer || canvasElement.parentElement || document.body;
+    parent.appendChild(this._container);
   }
 
   public addView(key: string, view: UIView): void {
@@ -176,11 +179,12 @@ export class GameUI extends EventEmitter {
         #game-ui {
           position: absolute;
           top: 10px;
-          right: 10px;
+          left: 10px;
           width: 250px;
           font-family: Arial, sans-serif;
           color: white;
           pointer-events: all;
+          z-index: 100;
         }
         
         #ui-views-container {

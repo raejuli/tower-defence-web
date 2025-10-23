@@ -1,117 +1,176 @@
 /**
  * Game States - Playing State
- * Business logic layer - orchestrates systems to implement game rules
+ * BEHAVIOUR TREE: Contains readable game rules and flow control
+ * This state defines HOW the game plays - the actual game rules
  */
 
 import { State } from '../../engine/state/StateMachine';
 import { TowerDefenceGame } from '../TowerDefenceGame';
+import { ServiceLocator } from '../../engine/services/ServiceLocator';
+import { ITowerService, IPlacementService, IGameStateService } from '../services/IGameServices';
 import { StateMachineSystem } from '../../engine/systems/StateMachineSystem';
 import { TowerSystem } from '../systems/TowerSystem';
 import { ProjectileSystem } from '../systems/ProjectileSystem';
 import { PathFollowingSystem } from '../systems/PathFollowingSystem';
 import { TowerSelectionSystem } from '../systems/TowerSelectionSystem';
-import { ChainLightningComponent } from '../components/ChainLightningComponent';
 import { StateMachineComponent } from '../../engine/components/StateMachineComponent';
 import { EnemyComponent } from '../components/EnemyComponent';
-import { ServiceLocator } from '../../engine/services/ServiceLocator';
-import { IEnemyService, IGameStateService } from '../services/IGameServices';
 
+/**
+ * PLAYING STATE BEHAVIOUR TREE
+ * 
+ * This is the high-level game loop that defines the rules of tower defense gameplay.
+ * Each step is readable and represents a game rule that could be edited visually.
+ * 
+ * Flow:
+ * 1. Update all entity AI (enemy states)
+ * 2. Towers find and shoot at enemies
+ * 3. Projectiles move and damage enemies
+ * 4. RULE: When enemy dies → Award money and score
+ * 5. Enemies walk the path
+ * 6. RULE: When enemy reaches end → Lose lives
+ * 7. Clean up dead entities
+ * 8. Update visuals
+ */
 export class PlayingState extends State<TowerDefenceGame> {
+  private _towerSelectedHandler: ((data: any) => void) | null = null;
+  private _towerDeselectedHandler: (() => void) | null = null;
+
   public onEnter(previousState?: State<TowerDefenceGame>): void {
-    console.log('Game is playing');
+    console.log('🎮 Game is playing - Combat rules active');
+    
+    // Register UI event listeners for tower selection
+    this._towerSelectedHandler = (data: any) => {
+      const placementService = ServiceLocator.get<IPlacementService>('PlacementService');
+      placementService.enterPlacementMode(data.towerType, data.range);
+    };
+    
+    this._towerDeselectedHandler = () => {
+      const towerService = ServiceLocator.get<ITowerService>('TowerService');
+      towerService.deselectAllTowers();
+      this.context.ui.hideTowerDetails();
+    };
+    
+    this.context.ui.on('towerSelected', this._towerSelectedHandler);
+    this.context.ui.on('towerDeselected', this._towerDeselectedHandler);
   }
 
+  /**
+   * MAIN GAME LOOP - This defines the rules of tower defense
+   * Each section represents a game rule that would be a node in a visual behaviour tree
+   */
   public onUpdate(deltaTime: number): void {
     const world = this.context.world;
-    
-    // Get systems (core logic)
+    const gameState = ServiceLocator.get<IGameStateService>('GameStateService');
+
+    // ============================================================
+    // RULE 1: Update AI - All entities update their state machines
+    // ============================================================
     const stateMachineSystem = world.getSystem(StateMachineSystem);
-    const towerSystem = world.getSystem(TowerSystem);
-    const projectileSystem = world.getSystem(ProjectileSystem);
-    const pathFollowingSystem = world.getSystem(PathFollowingSystem);
-    const towerSelectionSystem = world.getSystem(TowerSelectionSystem);
-    
-    // Update state machines first (enemy states)
     if (stateMachineSystem) {
       stateMachineSystem.update(deltaTime);
     }
-    
-    // Get entities
-    const enemies = world.getEntitiesWithComponents(['Enemy', 'Transform']);
-    
-    // Update tower cooldowns
+
+    // ============================================================
+    // RULE 2: Towers Attack - Towers target and shoot enemies
+    // ============================================================
+    const towerSystem = world.getSystem(TowerSystem);
     if (towerSystem) {
+      const enemies = world.getEntitiesWithComponents(['Enemy', 'Transform']);
+      
+      // Update tower cooldowns
       towerSystem.updateCooldowns(deltaTime);
-    }
-    
-    // Tower targeting and shooting (business logic: towers attack enemies)
-    if (towerSystem) {
+      
+      // Towers automatically target and shoot nearest enemy in range
       towerSystem.processTowers(enemies);
     }
-    
-    // Update projectiles (business logic: handle hits and rewards)
+
+    // ============================================================
+    // RULE 3: Projectiles Damage Enemies
+    // GAME RULE: When projectile hits enemy → Damage enemy
+    // GAME RULE: When enemy dies → Award money and score
+    // GAME RULE: When projectile hits → Remove projectile (unless chaining)
+    // ============================================================
+    const projectileSystem = world.getSystem(ProjectileSystem);
     if (projectileSystem) {
-      const results = projectileSystem.processProjectiles(deltaTime);
-      const enemyService = ServiceLocator.get<IEnemyService>('EnemyService');
+      const hits = projectileSystem.processProjectiles(deltaTime);
       
-      for (const result of results) {
-        if (result.hit) {
-          // Give reward if enemy was killed
-          if (result.killed && result.target) {
-            world.removeEntity(result.target);
-            enemyService.onEnemyKilled(result.reward);
+      for (const hit of hits) {
+        if (hit.hit && hit.target) {
+          // GAME RULE: Enemy killed → Award reward
+          if (hit.killed) {
+            world.removeEntity(hit.target);
+            gameState.addMoney(hit.reward);
+            gameState.addScore(hit.reward);
           }
-          
-          // Check if projectile is still chaining (system handles this)
-          const chainComp = result.projectile.getComponent('ChainLightning') as ChainLightningComponent;
-          if (!chainComp || !chainComp.canChain()) {
-            // Remove projectile (no chaining component or max chains reached)
-            world.removeEntity(result.projectile);
+
+          // GAME RULE: Projectile consumed unless it can chain to another target
+          if (!hit.canChain) {
+            world.removeEntity(hit.projectile);
           }
-          // If chainComp exists and can still chain, system already updated target
-        } else if (result.targetDead) {
-          // Remove projectiles whose target died (system checked for chains already)
-          world.removeEntity(result.projectile);
+        } else if (hit.targetDead) {
+          // GAME RULE: Orphaned projectiles are removed
+          world.removeEntity(hit.projectile);
         }
       }
     }
-    
-    // Update enemies following path (business logic: lose lives when enemies reach end)
+
+    // ============================================================
+    // RULE 4: Enemies Walk Path
+    // GAME RULE: When enemy reaches end → Player loses lives
+    // ============================================================
+    const pathFollowingSystem = world.getSystem(PathFollowingSystem);
     if (pathFollowingSystem) {
-      const results = pathFollowingSystem.processEnemies(deltaTime);
-      const enemyService = ServiceLocator.get<IEnemyService>('EnemyService');
+      const pathResults = pathFollowingSystem.processEnemies(deltaTime);
       
-      for (const result of results) {
+      for (const result of pathResults) {
         if (result.reachedEnd) {
-          enemyService.onEnemyReachedEnd(result.damage);
+          // GAME RULE: Enemy reached end → Lose lives based on enemy damage
+          gameState.loseLife(result.damage);
           world.removeEntity(result.enemy);
         }
       }
     }
-    
-    // Check for dead enemies that need to be removed (handles stunned/slowed enemies that died)
-    const allEnemies = world.getEntitiesWithComponents(['Enemy', 'StateMachine']);
-    const enemyService = ServiceLocator.get<IEnemyService>('EnemyService');
-    
-    for (const enemy of allEnemies) {
+
+    // ============================================================
+    // RULE 5: Clean Up Dead Enemies
+    // GAME RULE: Enemies in "dead" state award rewards and are removed
+    // (Handles enemies killed by status effects, state transitions, etc.)
+    // ============================================================
+    const deadEnemies = world.getEntitiesWithComponents(['Enemy', 'StateMachine']);
+    for (const enemy of deadEnemies) {
       const stateMachine = enemy.getComponent('StateMachine') as StateMachineComponent;
-      if (stateMachine && stateMachine.stateMachine.getCurrentStateName() === 'dead') {
-        // Enemy is in dead state, remove it
+      if (stateMachine?.stateMachine.getCurrentStateName() === 'dead') {
         const enemyComp = enemy.getComponent('Enemy') as EnemyComponent;
         if (enemyComp) {
-          enemyService.onEnemyKilled(enemyComp.stats.reward);
+          gameState.addMoney(enemyComp.stats.reward);
+          gameState.addScore(enemyComp.stats.reward);
         }
         world.removeEntity(enemy);
       }
     }
-    
-    // Update tower selection graphics
+
+    // ============================================================
+    // RULE 6: Update Visual Feedback
+    // ============================================================
+    const towerSelectionSystem = world.getSystem(TowerSelectionSystem);
     if (towerSelectionSystem) {
       towerSelectionSystem.updateTowerGraphics();
     }
   }
 
   public onExit(nextState?: State<TowerDefenceGame>): void {
-    console.log('Exited playing state');
+    console.log('⏸️ Exited playing state');
+    
+    // Unregister UI event listeners
+    if (this._towerSelectedHandler) {
+      this.context.ui.off('towerSelected', this._towerSelectedHandler);
+      this._towerSelectedHandler = null;
+    }
+    
+    if (this._towerDeselectedHandler) {
+      this.context.ui.off('towerDeselected', this._towerDeselectedHandler);
+      this._towerDeselectedHandler = null;
+    }
   }
 }

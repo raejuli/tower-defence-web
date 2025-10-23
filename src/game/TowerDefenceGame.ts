@@ -18,6 +18,7 @@ import { RenderableComponent } from '../engine/components/RenderableComponent';
 import { StateMachineComponent } from '../engine/components/StateMachineComponent';
 import { EnemyComponent } from './components/EnemyComponent';
 import { PathFollowerComponent } from './components/PathFollowerComponent';
+import { PathComponent } from './components/PathComponent';
 import { Entity } from '../engine/ecs/Entity';
 import { GameStateModel } from './models/GameStateModel';
 import { WaveStateModel, WaveConfiguration } from './models/WaveStateModel';
@@ -63,10 +64,11 @@ export class TowerDefenceGame {
   public level: LevelModel;
   
   private renderSystem: RenderSystem;
-  private ui: GameUI;
+  public ui: GameUI;  // Public so states can access it
   private lastTime: number = 0;
   
   public placedTowers: Entity[] = [];
+  public pathEntity: Entity | null = null; // Reference to the main path entity
 
   constructor(config: GameConfig) {
     // Create PixiJS application
@@ -103,19 +105,19 @@ export class TowerDefenceGame {
     // Register services
     this._registerServices();
     
-    // Create game state machine
+    // Create game state machine (but don't set initial state yet)
     this.gameStateMachine = new StateMachine<TowerDefenceGame>(this);
     this.gameStateMachine.addState(new PlayingState('playing', this));
     this.gameStateMachine.addState(new PlacementState('placement', this));
     this.gameStateMachine.addState(new PausedState('paused', this));
-    this.gameStateMachine.setState('playing');
+    // Don't call setState yet - wait until after UI is initialized
     
-    // Create wave state machine
+    // Create wave state machine (but don't set initial state yet)
     this.waveStateMachine = new StateMachine<TowerDefenceGame>(this);
     this.waveStateMachine.addState(new WaveIdleState('idle', this));
     this.waveStateMachine.addState(new WaveSpawningState('spawning', this));
     this.waveStateMachine.addState(new WaveActiveState('active', this));
-    this.waveStateMachine.setState('idle'); // Start with idle, will auto-start first wave
+    // Don't call setState yet - wait until after UI is initialized
     
     // Initialize will be called after app is ready
     this.renderSystem = null as any;
@@ -140,7 +142,16 @@ export class TowerDefenceGame {
   private _registerPlacementService(): void {
     // Register placement service (needs stage from app)
     const placementService = new PlacementService(this.app.stage);
+    placementService.setGameStateMachine(this.gameStateMachine);
     ServiceLocator.register('PlacementService', placementService);
+  }
+
+  private _initializeEnemyService(): void {
+    // Initialize enemy service with dependencies after path entity is created
+    const enemyService = ServiceLocator.get<EnemyService>('EnemyService');
+    if (this.pathEntity) {
+      enemyService.setDependencies(this.world, this.waveState, this.level, this.pathEntity);
+    }
   }
 
   async initialize(parent: HTMLElement): Promise<void> {
@@ -170,55 +181,21 @@ export class TowerDefenceGame {
     // Register placement service (needs stage)
     this._registerPlacementService();
     
-    // Create UI
-    this.ui = new GameUI(this.app.canvas as HTMLCanvasElement);
+    // Create path entity
+    this.createPathEntity();
     
-    // Setup UI event listeners
-    this._setupUIEventListeners();
+    // Initialize enemy service with dependencies
+    this._initializeEnemyService();
     
-    // Draw path
-    this.drawPath();
+    // Create UI (pass parent container so UI is scoped to it)
+    this.ui = new GameUI(this.app.canvas as HTMLCanvasElement, parent);
+    
+    // Now that UI is initialized, set initial states (triggers onEnter which needs UI)
+    this.gameStateMachine.setState('playing');
+    this.waveStateMachine.setState('idle'); // Start with idle, will auto-start first wave
     
     // Start game loop
     this.app.ticker.add(() => this.update());
-  }
-
-  private _setupUIEventListeners(): void {
-    // Tower selection
-    this.ui.on('towerSelected', (data: any) => {
-      console.log('Game: Received towerSelected event', data);
-      this.enterPlacementMode(data.towerType, data.range);
-    });
-
-    // Tower placement request
-    this.ui.on('towerPlacementRequested', (data: any) => {
-      console.log('Game: Received towerPlacementRequested event', data);
-      
-      // Delegate to placement state if we're in placement mode
-      const placementState = this.gameStateMachine.getState('placement') as PlacementState;
-      if (placementState && this.gameStateMachine.getCurrentStateName() === 'placement') {
-        placementState.handlePlacementRequest(data.towerType, data.x, data.y);
-      }
-    });
-
-    // Placement cancelled
-    this.ui.on('placementCancelled', () => {
-      console.log('Game: Received placementCancelled event');
-      this.exitPlacementMode();
-    });
-
-    // Tower deselected
-    this.ui.on('towerDeselected', () => {
-      console.log('Game: Received towerDeselected event');
-      const towerService = ServiceLocator.get<TowerService>('TowerService');
-      towerService.deselectAllTowers();
-      this.ui.hideTowerDetails();
-    });
-  }
-
-  public onTowerClicked(tower: Entity): void {
-    const towerService = ServiceLocator.get<TowerService>('TowerService');
-    towerService.onTowerClicked(tower);
   }
 
   private _showTowerDetails(tower: Entity): void {
@@ -263,84 +240,31 @@ export class TowerDefenceGame {
     });
   }
 
-  public spawnEnemy(): void {
-    const enemy = this.world.createEntity('Enemy');
+  private createPathEntity(): void {
+    // Create a path entity that holds the path data
+    const pathEntity = this.world.createEntity('Main Path');
     
-    const enemySize = 20;
-    // Add transform - center enemy on path start
-    const startPos = this.level.path[0];
-    const transform = new TransformComponent(startPos.x - enemySize / 2, startPos.y - enemySize / 2);
-    enemy.addComponent(transform);
-
-    // Calculate scaled stats based on wave (business logic here, not in model)
-    const health = Math.floor(this.waveState.config.enemyHealth * (1 + (this.waveState.currentWave - 1) * 0.2));
-    const speed = this.waveState.config.enemySpeed * (1 + (this.waveState.currentWave - 1) * 0.05);
-    const reward = Math.floor(this.waveState.config.enemyReward * (1 + (this.waveState.currentWave - 1) * 0.15));
-
-    // Add enemy component
-    const enemyComp = new EnemyComponent({
-      health: health,
-      maxHealth: health,
-      speed: speed,
-      damage: this.waveState.config.enemyDamage,
-      reward: reward
-    });
-    enemy.addComponent(enemyComp);
-
-    // Add path follower
-    const pathFollower = new PathFollowerComponent([...this.level.path], speed);
-    enemy.addComponent(pathFollower);
-
-    // Add renderable
+    // Add transform at origin (path is drawn in world coordinates)
+    const transform = new TransformComponent(0, 0);
+    pathEntity.addComponent(transform);
+    
+    // Add path component with the level's waypoints
+    const pathComponent = new PathComponent([...this.level.path], 30, 0x2a2a3e);
+    pathEntity.addComponent(pathComponent);
+    
+    // Add renderable to draw the path
     const renderable = new RenderableComponent();
-    renderable.graphics.rect(0, 0, enemySize, enemySize);
-    renderable.graphics.fill(0xff0000);
-    enemy.addComponent(renderable);
-
-    // Add state machine with all enemy states
-    const stateMachine = new StateMachineComponent(enemy);
-    stateMachine.stateMachine.addState(new EnemyMovingState('moving', enemy));
-    stateMachine.stateMachine.addState(new EnemyDamagedState('damaged', enemy));
-    stateMachine.stateMachine.addState(new EnemyStunnedState('stunned', enemy, 1.0));
-    stateMachine.stateMachine.addState(new EnemySlowedState('slowed', enemy, 2.0, 0.5));
-    stateMachine.stateMachine.addState(new EnemyDeadState('dead', enemy));
-    stateMachine.stateMachine.addState(new EnemyReachedEndState('reachedEnd', enemy));
-    stateMachine.stateMachine.setState('moving');
-    enemy.addComponent(stateMachine);
-  }
-
-  private drawPath(): void {
-    const graphics = this.app.stage.addChild(new Graphics());
-    graphics.zIndex = -1;
-    
-    graphics.moveTo(this.level.path[0].x, this.level.path[0].y);
+    renderable.graphics.moveTo(this.level.path[0].x, this.level.path[0].y);
     for (let i = 1; i < this.level.path.length; i++) {
-      graphics.lineTo(this.level.path[i].x, this.level.path[i].y);
+      renderable.graphics.lineTo(this.level.path[i].x, this.level.path[i].y);
     }
-    graphics.stroke({ width: 30, color: 0x2a2a3e });
-  }
-
-  enterPlacementMode(towerType: string, range: number): void {
-    const placementState = this.gameStateMachine.getState('placement') as PlacementState;
-    if (placementState) {
-      placementState.setSelectedTowerType(towerType, range);
-    }
-    this.gameStateMachine.setState('placement');
-  }
-
-  exitPlacementMode(): void {
-    this.gameStateMachine.setState('playing');
-  }
-
-  togglePause(): void {
-    const gameStateService = ServiceLocator.get<GameStateService>('GameStateService');
+    renderable.graphics.stroke({ width: pathComponent.pathWidth, color: pathComponent.color });
+    renderable.zIndex = -1;
+    pathEntity.addComponent(renderable);
     
-    if (this.gameStateMachine.getCurrentStateName() === 'paused') {
-      this.gameStateMachine.setState('playing');
-      gameStateService.setPaused(false);
-    } else {
-      this.gameStateMachine.setState('paused');
-      gameStateService.setPaused(true);
-    }
+    // Store reference for easy access
+    this.pathEntity = pathEntity;
+    
+    console.log(`✅ Created path entity with ${this.level.path.length} waypoints`);
   }
 }

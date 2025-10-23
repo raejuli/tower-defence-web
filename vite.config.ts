@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import { resolve } from 'path';
 
 export default defineConfig({
   root: './',
@@ -6,12 +7,18 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     sourcemap: true,
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        editor: resolve(__dirname, 'editor-react.html')
+      }
+    }
   },
   server: {
     port: 3000,
     open: true
   },
   resolve: {
-    extensions: ['.ts', '.js']
+    extensions: ['.tsx', '.ts', '.jsx', '.js']
   }
 });

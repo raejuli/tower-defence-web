@@ -19,6 +19,7 @@ export interface IGameStateService {
 export interface IEnemyService {
   onEnemyKilled(reward: number): void;
   onEnemyReachedEnd(damage: number): void;
+  spawnEnemy(): void;
 }
 
 export interface ITowerService {
@@ -32,4 +33,6 @@ export interface ITowerService {
 export interface IPlacementService {
   updatePreview(x: number, y: number, range: number, canPlace: boolean): void;
   hidePreview(): void;
+  enterPlacementMode(towerType: string, range: number): void;
+  exitPlacementMode(): void;
 }

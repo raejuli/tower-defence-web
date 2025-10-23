@@ -7,6 +7,7 @@ import { System } from '../../engine/ecs/System';
 import { World } from '../../engine/ecs/World';
 import { Entity } from '../../engine/ecs/Entity';
 import { PathFollowerComponent } from '../components/PathFollowerComponent';
+import { PathComponent } from '../components/PathComponent';
 import { TransformComponent } from '../../engine/components/TransformComponent';
 import { EnemyComponent } from '../components/EnemyComponent';
 
@@ -36,7 +37,21 @@ export class PathFollowingSystem extends System {
         continue;
       }
 
-      const target = pathFollower.getCurrentTarget();
+      // Get the path entity
+      const pathEntity = this._world.getEntity(pathFollower.pathEntityId);
+      if (!pathEntity) {
+        console.warn(`Path entity ${pathFollower.pathEntityId} not found for enemy ${entity.name}`);
+        continue;
+      }
+
+      const pathComponent = pathEntity.getComponent('Path') as PathComponent;
+      if (!pathComponent) {
+        console.warn(`Path component not found on entity ${pathEntity.name}`);
+        continue;
+      }
+
+      // Get current target waypoint
+      const target = pathComponent.getWaypoint(pathFollower.currentIndex);
       if (!target) {
         // Reached end of path
         enemy.reachedEnd(); // State transition handled in component
