@@ -32,13 +32,13 @@ import { SelectableComponent } from './components/SelectableComponent';
 import { ChainLightningTowerComponent } from './components/ChainLightningTowerComponent';
 import { InteractableComponent } from '../engine/components/InteractableComponent';
 import { ServiceLocator } from '../engine/services/ServiceLocator';
-import { 
-  EnemyMovingState, 
-  EnemyDamagedState, 
-  EnemyStunnedState, 
-  EnemySlowedState, 
-  EnemyDeadState, 
-  EnemyReachedEndState 
+import {
+  EnemyMovingState,
+  EnemyDamagedState,
+  EnemyStunnedState,
+  EnemySlowedState,
+  EnemyDeadState,
+  EnemyReachedEndState
 } from './states/EnemyStates';
 import { GameStateService } from './services/GameStateService';
 import { EnemyService } from './services/EnemyService';
@@ -49,6 +49,7 @@ export interface GameConfig {
   width: number;
   height: number;
   backgroundColor: number;
+  debug?: boolean; // Enable debug visualizations
 }
 
 export class TowerDefenceGame {
@@ -57,29 +58,36 @@ export class TowerDefenceGame {
   public gameStateMachine: StateMachine<TowerDefenceGame>;
   public waveStateMachine: StateMachine<TowerDefenceGame>;
   public inputSystem: InputSystem | null = null;
-  
+
   // Models (MVC)
   public gameState: GameStateModel;
   public waveState: WaveStateModel;
   public level: LevelModel;
-  
+
   private renderSystem: RenderSystem;
   public ui: GameUI;  // Public so states can access it
   private lastTime: number = 0;
-  
+  public debug: boolean = true; // Debug mode flag
+
   public placedTowers: Entity[] = [];
   public pathEntity: Entity | null = null; // Reference to the main path entity
 
   constructor(config: GameConfig) {
     // Create PixiJS application
     this.app = new Application();
-    
+
     // Create ECS world
     this.world = new World();
-    
+
+    // Set debug mode
+    this.debug = config.debug ?? false;
+    if (this.debug) {
+      console.log('🐛 Debug mode enabled');
+    }
+
     // Initialize models
     this.gameState = new GameStateModel();
-    
+
     const waveConfig: WaveConfiguration = {
       enemiesPerWave: 5,
       enemyHealth: 50,
@@ -90,7 +98,7 @@ export class TowerDefenceGame {
       idleDuration: 10.0
     };
     this.waveState = new WaveStateModel(waveConfig);
-    
+
     this.level = new LevelModel([
       { x: 0, y: 200 },
       { x: 200, y: 200 },
@@ -101,24 +109,24 @@ export class TowerDefenceGame {
       { x: 600, y: 300 },
       { x: 800, y: 300 }
     ], config.width, config.height, config.backgroundColor);
-    
+
     // Register services
     this._registerServices();
-    
+
     // Create game state machine (but don't set initial state yet)
     this.gameStateMachine = new StateMachine<TowerDefenceGame>(this);
     this.gameStateMachine.addState(new PlayingState('playing', this));
     this.gameStateMachine.addState(new PlacementState('placement', this));
     this.gameStateMachine.addState(new PausedState('paused', this));
     // Don't call setState yet - wait until after UI is initialized
-    
+
     // Create wave state machine (but don't set initial state yet)
     this.waveStateMachine = new StateMachine<TowerDefenceGame>(this);
     this.waveStateMachine.addState(new WaveIdleState('idle', this));
     this.waveStateMachine.addState(new WaveSpawningState('spawning', this));
     this.waveStateMachine.addState(new WaveActiveState('active', this));
     // Don't call setState yet - wait until after UI is initialized
-    
+
     // Initialize will be called after app is ready
     this.renderSystem = null as any;
     this.ui = null as any;
@@ -128,11 +136,11 @@ export class TowerDefenceGame {
     // Register game state service
     const gameStateService = new GameStateService(this.gameState);
     ServiceLocator.register('GameStateService', gameStateService);
-    
+
     // Register enemy service
     const enemyService = new EnemyService();
     ServiceLocator.register('EnemyService', enemyService);
-    
+
     // Register tower service
     const towerService = new TowerService(this.level, this.placedTowers);
     towerService.setOnTowerClickedCallback((tower) => this._showTowerDetails(tower));
@@ -161,16 +169,16 @@ export class TowerDefenceGame {
       height: 600,
       backgroundColor: 0x1a1a2e
     });
-    
+
     parent.appendChild(this.app.canvas);
 
     // Setup systems (but states will call them, not automatic updates)
     this.renderSystem = new RenderSystem(this.world, this.app.stage);
     this.world.addSystem(this.renderSystem);
-    
+
     this.inputSystem = new InputSystem(this.world, this.app);
     this.world.addSystem(this.inputSystem);
-    
+
     // Register game systems (states will call their methods)
     this.world.addSystem(new StateMachineSystem(this.world));
     this.world.addSystem(new TowerSystem(this.world));
@@ -180,20 +188,20 @@ export class TowerDefenceGame {
 
     // Register placement service (needs stage)
     this._registerPlacementService();
-    
+
     // Create path entity
     this.createPathEntity();
-    
+
     // Initialize enemy service with dependencies
     this._initializeEnemyService();
-    
+
     // Create UI (pass parent container so UI is scoped to it)
     this.ui = new GameUI(this.app.canvas as HTMLCanvasElement, parent);
-    
+
     // Now that UI is initialized, set initial states (triggers onEnter which needs UI)
     this.gameStateMachine.setState('playing');
     this.waveStateMachine.setState('idle'); // Start with idle, will auto-start first wave
-    
+
     // Start game loop
     this.app.ticker.add(() => this.update());
   }
@@ -214,16 +222,16 @@ export class TowerDefenceGame {
       if (this.inputSystem) {
         this.inputSystem.update(deltaTime);
       }
-      
+
       // Update game state machine (business logic layer)
       this.gameStateMachine.update(deltaTime);
-      
+
       // Update wave state machine (business logic layer)
       this.waveStateMachine.update(deltaTime);
-      
+
       // Process pending entity changes
       this.world.update(deltaTime);
-      
+
       // Render everything
       if (this.renderSystem) {
         this.renderSystem.update(deltaTime);
@@ -243,28 +251,55 @@ export class TowerDefenceGame {
   private createPathEntity(): void {
     // Create a path entity that holds the path data
     const pathEntity = this.world.createEntity('Main Path');
-    
+
     // Add transform at origin (path is drawn in world coordinates)
     const transform = new TransformComponent(0, 0);
     pathEntity.addComponent(transform);
-    
+
     // Add path component with the level's waypoints
     const pathComponent = new PathComponent([...this.level.path], 30, 0x2a2a3e);
     pathEntity.addComponent(pathComponent);
-    
+
     // Add renderable to draw the path
     const renderable = new RenderableComponent();
+
+    // Draw path line
     renderable.graphics.moveTo(this.level.path[0].x, this.level.path[0].y);
     for (let i = 1; i < this.level.path.length; i++) {
       renderable.graphics.lineTo(this.level.path[i].x, this.level.path[i].y);
     }
     renderable.graphics.stroke({ width: pathComponent.pathWidth, color: pathComponent.color });
-    renderable.zIndex = -1;
+
+    // ============================================================
+    // DEBUG MODE: Visualize waypoint positions
+    // ============================================================
+    if (this.debug) {
+      console.log('🐛 Drawing waypoint debug visualization');
+      for (let i = 0; i < this.level.path.length; i++) {
+        const point = this.level.path[i];
+
+        // Color-code by position (red=start, blue=end, yellow=middle)
+        const waypointColor = i === 0 ? 0xff0000 : (i === this.level.path.length - 1 ? 0x0000ff : 0xffff00);
+
+        // Draw outer ring (white)
+        renderable.graphics
+          .circle(point.x, point.y, 8)
+          .stroke({ width: 3, color: 0xffffff });
+
+        // Draw inner filled circle (color-coded)
+        renderable.graphics
+          .circle(point.x, point.y, 6)
+          .fill({ color: waypointColor, alpha: 1 });
+
+        console.log(`  Waypoint ${i}: (${point.x}, ${point.y}) - Color: 0x${waypointColor.toString(16)}`);
+      }
+    }
+
     pathEntity.addComponent(renderable);
-    
+
     // Store reference for easy access
     this.pathEntity = pathEntity;
-    
+
     console.log(`✅ Created path entity with ${this.level.path.length} waypoints`);
   }
 }
