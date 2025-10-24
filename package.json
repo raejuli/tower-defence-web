@@ -19,7 +19,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@raejuli/core-engine-gdk": "file:../core-engine-gdk"
+    "@raejuli/core-engine-gdk": "0.2.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
