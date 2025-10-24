@@ -8,8 +8,17 @@
 import { SerializedScene } from '@raejuli/core-engine-gdk/serialization';
 import { SceneLoader } from '../loaders/SceneLoader';
 
+// Import scene JSON files directly so Vite bundles them
+import tutorialPathScene from './data/tutorial-path.json';
+import progressiveOnslaughtScene from './data/progressive-onslaught.json';
+import dualAssaultScene from './data/dual-assault.json';
+import spiralChallengeScene from './data/spiral-challenge.json';
+import zigzagRushScene from './data/zigzag-rush.json';
+import theMazeScene from './data/the-maze.json';
+
 export class SceneRegistry {
   private static scenes: Map<string, SerializedScene> = new Map();
+  private static initialized = false;
 
   /**
    * Register a scene directly
@@ -76,23 +85,33 @@ export class SceneRegistry {
   static clear(): void {
     this.scenes.clear();
   }
+
+  /**
+   * Initialize built-in scenes (call this at startup)
+   */
+  static initialize(): void {
+    if (this.initialized) return;
+
+    console.log('📦 Initializing built-in scenes...');
+
+    // Register all imported scenes
+    const builtInScenes = [
+      tutorialPathScene,
+      progressiveOnslaughtScene,
+      dualAssaultScene,
+      spiralChallengeScene,
+      zigzagRushScene,
+      theMazeScene
+    ];
+
+    for (const scene of builtInScenes) {
+      this.registerScene(scene as SerializedScene);
+    }
+
+    this.initialized = true;
+    console.log(`✅ Loaded ${builtInScenes.length} built-in scenes`);
+  }
 }
 
-// ============================================================
-// LOAD BUILT-IN SCENES FROM JSON FILES
-// ============================================================
-
-// Load all built-in scene JSON files
-SceneRegistry.loadFromFiles([
-  '/src/game/scenes/data/tutorial-path.json',
-  '/src/game/scenes/data/progressive-onslaught.json',
-  '/src/game/scenes/data/dual-assault.json',
-  '/src/game/scenes/data/spiral-challenge.json',
-  '/src/game/scenes/data/zigzag-rush.json',
-  '/src/game/scenes/data/the-maze.json'
-]).then(scenes => {
-  console.log(`✅ Loaded ${scenes.length} built-in scenes`);
-}).catch(error => {
-  console.error('❌ Failed to load built-in scenes:', error);
-});
-
+// Initialize scenes immediately when this module is loaded
+SceneRegistry.initialize();
