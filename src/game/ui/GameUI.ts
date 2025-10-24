@@ -27,6 +27,7 @@ export interface GameUIState {
   score: number;
   isPaused: boolean;
   isPlacementMode: boolean;
+  isSceneSelect: boolean;
 }
 
 export class GameUI extends EventEmitter {
@@ -41,7 +42,8 @@ export class GameUI extends EventEmitter {
     wave: 0,
     score: 0,
     isPaused: false,
-    isPlacementMode: false
+    isPlacementMode: false,
+    isSceneSelect: false
   };
 
   // Views
@@ -161,6 +163,58 @@ export class GameUI extends EventEmitter {
   public setState(state: Partial<GameUIState>): void {
     this._state = { ...this._state, ...state };
     this._updateDisplay();
+    this._updateSceneSelectVisibility();
+  }
+
+  public setScenes(scenesByDifficulty: { Easy: any[]; Medium: any[]; Hard: any[]; Expert: any[] }): void {
+    const container = this._container.querySelector('#scenes-container');
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    // Render each difficulty section
+    (['Easy', 'Medium', 'Hard', 'Expert'] as const).forEach(difficulty => {
+      const scenes = scenesByDifficulty[difficulty];
+      if (scenes.length === 0) return;
+
+      const section = document.createElement('div');
+      section.className = 'difficulty-section';
+      section.innerHTML = `
+        <h3>${difficulty}</h3>
+        <div class="scene-grid" data-difficulty="${difficulty}"></div>
+      `;
+
+      const grid = section.querySelector('.scene-grid')!;
+      scenes.forEach((scene: any) => {
+        const card = document.createElement('div');
+        card.className = 'scene-card';
+        card.dataset.sceneId = scene.id;
+        card.innerHTML = `
+          <h4>${scene.name}</h4>
+          <p>${scene.description}</p>
+          <span class="difficulty difficulty-${scene.difficulty}">${scene.difficulty}</span>
+        `;
+
+        card.addEventListener('click', () => {
+          this.emit('sceneSelected', scene.id);
+        });
+
+        grid.appendChild(card);
+      });
+
+      container.appendChild(section);
+    });
+  }
+
+  private _updateSceneSelectVisibility(): void {
+    const sceneSelect = this._container.querySelector('#scene-select');
+    if (sceneSelect) {
+      if (this._state.isSceneSelect) {
+        sceneSelect.classList.add('visible');
+      } else {
+        sceneSelect.classList.remove('visible');
+      }
+    }
   }
 
   public setPlacementMode(active: boolean): void {
@@ -190,6 +244,99 @@ export class GameUI extends EventEmitter {
         #ui-views-container {
           margin-bottom: 10px;
         }
+        
+        #scene-select {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.95);
+          display: none;
+          align-items: center;
+          justify-content: center;
+          z-index: 1000;
+        }
+        
+        #scene-select.visible {
+          display: flex;
+        }
+        
+        #scene-select-content {
+          max-width: 900px;
+          width: 90%;
+          max-height: 80vh;
+          overflow-y: auto;
+          padding: 30px;
+          background: rgba(20, 20, 40, 0.95);
+          border-radius: 10px;
+          border: 2px solid #444;
+        }
+        
+        #scene-select h2 {
+          margin-top: 0;
+          color: #fff;
+          text-align: center;
+          font-size: 32px;
+        }
+        
+        .difficulty-section {
+          margin: 20px 0;
+        }
+        
+        .difficulty-section h3 {
+          color: #aaa;
+          border-bottom: 2px solid #444;
+          padding-bottom: 5px;
+        }
+        
+        .scene-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          gap: 15px;
+          margin-top: 10px;
+        }
+        
+        .scene-card {
+          background: rgba(50, 50, 70, 0.8);
+          padding: 20px;
+          border-radius: 8px;
+          border: 2px solid #555;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        
+        .scene-card:hover {
+          border-color: #0f0;
+          background: rgba(60, 60, 80, 0.9);
+          transform: translateY(-3px);
+        }
+        
+        .scene-card h4 {
+          margin: 0 0 10px 0;
+          color: #fff;
+          font-size: 18px;
+        }
+        
+        .scene-card p {
+          margin: 5px 0;
+          color: #ccc;
+          font-size: 14px;
+        }
+        
+        .scene-card .difficulty {
+          display: inline-block;
+          padding: 3px 8px;
+          border-radius: 3px;
+          font-size: 12px;
+          font-weight: bold;
+          margin-top: 5px;
+        }
+        
+        .difficulty-Easy { background: #4CAF50; }
+        .difficulty-Medium { background: #FF9800; }
+        .difficulty-Hard { background: #F44336; }
+        .difficulty-Expert { background: #9C27B0; }
         
         #hud {
           background: rgba(0, 0, 0, 0.8);
@@ -264,6 +411,13 @@ export class GameUI extends EventEmitter {
           background: #444;
         }
       </style>
+      
+      <div id="scene-select">
+        <div id="scene-select-content">
+          <h2>🎬 Select a Scene</h2>
+          <div id="scenes-container"></div>
+        </div>
+      </div>
       
       <div id="hud">
         <div>💰 Money: $<span id="money">500</span></div>

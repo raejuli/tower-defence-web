@@ -11,6 +11,7 @@ import { StateMachine } from '../engine/state/StateMachine';
 import { PlayingState } from './states/PlayingState';
 import { PlacementState } from './states/PlacementState';
 import { PausedState } from './states/PausedState';
+import { SceneSelectState } from './states/SceneSelectState';
 import { WaveIdleState, WaveSpawningState, WaveActiveState } from './states/WaveStates';
 import { GameUI } from './ui/GameUI';
 import { TransformComponent } from '../engine/components/TransformComponent';
@@ -44,6 +45,8 @@ import { GameStateService } from './services/GameStateService';
 import { EnemyService } from './services/EnemyService';
 import { TowerService } from './services/TowerService';
 import { PlacementService } from './services/PlacementService';
+import { SceneModel } from './models/SceneModel';
+import './scenes/SceneRegistry'; // Import to register built-in scenes
 
 export interface GameConfig {
   width: number;
@@ -115,6 +118,7 @@ export class TowerDefenceGame {
 
     // Create game state machine (but don't set initial state yet)
     this.gameStateMachine = new StateMachine<TowerDefenceGame>(this);
+    this.gameStateMachine.addState(new SceneSelectState('sceneSelect', this));
     this.gameStateMachine.addState(new PlayingState('playing', this));
     this.gameStateMachine.addState(new PlacementState('placement', this));
     this.gameStateMachine.addState(new PausedState('paused', this));
@@ -199,8 +203,9 @@ export class TowerDefenceGame {
     this.ui = new GameUI(this.app.canvas as HTMLCanvasElement, parent);
 
     // Now that UI is initialized, set initial states (triggers onEnter which needs UI)
-    this.gameStateMachine.setState('playing');
-    this.waveStateMachine.setState('idle'); // Start with idle, will auto-start first wave
+    // Start with scene selection instead of directly playing
+    this.gameStateMachine.setState('sceneSelect');
+    // Wave state machine will be initialized when a scene is selected
 
     // Start game loop
     this.app.ticker.add(() => this.update());
@@ -302,4 +307,66 @@ export class TowerDefenceGame {
 
     console.log(`✅ Created path entity with ${this.level.path.length} waypoints`);
   }
+
+  /**
+   * Load a scene into the game
+   * This replaces the current level, wave config, and resets game state
+   */
+  public loadScene(scene: SceneModel): void {
+    console.log(`🎬 Loading scene: ${scene.name}`);
+
+    // Clear existing entities (except UI-related ones)
+    const entitiesToRemove = this.world.getAllEntities().filter(e => {
+      // Remove all entities to start fresh
+      return true;
+    });
+    
+    entitiesToRemove.forEach(entity => {
+      this.world.removeEntity(entity);
+    });
+
+    // Clear placed towers array
+    this.placedTowers = [];
+
+    // Update level with scene's path
+    this.level = new LevelModel(
+      scene.path,
+      scene.width,
+      scene.height,
+      scene.backgroundColor
+    );
+
+    // Update wave configuration
+    this.waveState = new WaveStateModel(scene.waves);
+
+    // Reset game state with scene's starting resources
+    this.gameState.money = scene.startingMoney;
+    this.gameState.lives = scene.startingLives;
+    this.gameState.score = 0;
+    this.gameState.isPaused = false;
+
+    // Recreate path entity with new level data
+    this.createPathEntity();
+
+    // Reinitialize enemy service with new path
+    this._initializeEnemyService();
+
+    // Update app background color
+    this.app.renderer.background.color = scene.backgroundColor;
+
+    // Reset wave state machine to idle
+    this.waveStateMachine.setState('idle');
+
+    // Update UI with new state
+    this.ui.setState({
+      money: this.gameState.money,
+      lives: this.gameState.lives,
+      wave: this.waveState.currentWave,
+      score: this.gameState.score,
+      isPaused: false
+    });
+
+    console.log(`✅ Scene loaded: ${scene.name}`);
+  }
 }
+
