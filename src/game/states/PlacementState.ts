@@ -3,18 +3,11 @@
  * BEHAVIOUR TREE: Defines tower placement behaviour
  */
 
-import { State } from '../../engine/state/StateMachine';
+import { State } from '@raejuli/core-engine-gdk/state';
 import { TowerDefenceGame } from '../TowerDefenceGame';
-import { TransformComponent } from '../../engine/components/TransformComponent';
-import { RenderableComponent } from '../../engine/components/RenderableComponent';
-import { TowerComponent } from '../components/TowerComponent';
-import { SelectableComponent } from '../components/SelectableComponent';
-import { ChainLightningTowerComponent } from '../components/ChainLightningTowerComponent';
-import { InteractableComponent } from '../../engine/components/InteractableComponent';
-import { Entity } from '../../engine/ecs/Entity';
-import { ServiceLocator } from '../../engine/services/ServiceLocator';
+import { ServiceLocator } from '@raejuli/core-engine-gdk/services';
 import { IPlacementService, ITowerService, IGameStateService } from '../services/IGameServices';
-import { TowerService } from '../services/TowerService';
+import { UIService } from '../services/UIService';
 
 /**
  * PLACEMENT STATE BEHAVIOUR TREE
@@ -39,21 +32,29 @@ export class PlacementState extends State<TowerDefenceGame> {
 
   public onEnter(previousState?: State<TowerDefenceGame>): void {
     console.log('🏗️ Entered placement mode - Move mouse to place tower');
+    console.log('Selected tower type:', this._selectedTowerType);
     
+    // Pause the game during placement
+    const gameStateService = ServiceLocator.get<IGameStateService>('GameStateService');
+    gameStateService.setPaused(true);
+    
+    const ui = ServiceLocator.get<UIService>('UI').ui;
+
     // Register UI event listener for placement requests
     this._placementRequestHandler = (data: any) => {
+      console.log('PlacementState: Received towerPlacementRequested event', data);
       this.handlePlacementRequest(data.towerType, data.x, data.y);
     };
-    
+
     // Register UI event listener for placement cancelled
     this._placementCancelledHandler = () => {
       console.log('Placement cancelled');
-      const placementService = ServiceLocator.get<IPlacementService>('PlacementService');
-      placementService.exitPlacementMode();
+      this._context.gameStateMachine.setState('playing');
     };
-    
-    this._context.ui.on('towerPlacementRequested', this._placementRequestHandler);
-    this._context.ui.on('placementCancelled', this._placementCancelledHandler);
+
+    ui.on('towerPlacementRequested', this._placementRequestHandler);
+    ui.on('placementCancelled', this._placementCancelledHandler);
+    console.log('PlacementState: Event listeners registered');
   }
 
   /**
@@ -61,22 +62,22 @@ export class PlacementState extends State<TowerDefenceGame> {
    * Each frame, update the ghost tower preview to follow the mouse
    */
   public onUpdate(deltaTime: number): void {
-    if (!this._selectedTowerType || !this._context.inputSystem) return;
+    if (!this._selectedTowerType) return;
 
     // ============================================================
     // RULE 1: Ghost tower follows mouse cursor
     // ============================================================
-    const mousePos = this._context.inputSystem.getMousePosition();
+    const mousePos = this._context.input.getMousePosition();
     const x = mousePos.x;
     const y = mousePos.y;
-    
+
     // ============================================================
     // RULE 2: Validate placement location
     // GAME RULE: Can't place on path or on other towers
     // ============================================================
     const towerService = ServiceLocator.get<ITowerService>('TowerService');
     const canPlace = towerService.canPlaceTower(x, y);
-    
+
     // ============================================================
     // RULE 3: Visual feedback - green if valid, red if invalid
     // ============================================================
@@ -87,28 +88,36 @@ export class PlacementState extends State<TowerDefenceGame> {
   public onExit(nextState?: State<TowerDefenceGame>): void {
     console.log('✅ Exited placement mode');
     
+    // Unpause the game when exiting placement
+    const gameStateService = ServiceLocator.get<IGameStateService>('GameStateService');
+    gameStateService.setPaused(false);
+    
+    const ui = ServiceLocator.get<UIService>('UI').ui;
+
     // Unregister UI event listeners
     if (this._placementRequestHandler) {
-      this._context.ui.off('towerPlacementRequested', this._placementRequestHandler);
+      ui.off('towerPlacementRequested', this._placementRequestHandler);
       this._placementRequestHandler = null;
     }
-    
+
     if (this._placementCancelledHandler) {
-      this._context.ui.off('placementCancelled', this._placementCancelledHandler);
+      ui.off('placementCancelled', this._placementCancelledHandler);
       this._placementCancelledHandler = null;
     }
-    
+
     // Clean up visual feedback
     const placementService = ServiceLocator.get<IPlacementService>('PlacementService');
     placementService.hidePreview();
-    
-    this._context.ui.setPlacementMode(false);
+
+    ui.setPlacementMode(false);
   }
 
   public setSelectedTowerType(type: string, range: number): void {
+    console.log('setSelectedTowerType called with:', type, range);
+    const ui = ServiceLocator.get<UIService>('UI').ui;
     this._selectedTowerType = type;
     this._selectedTowerRange = range;
-    this._context.ui.setPlacementMode(true);
+    ui.setPlacementMode(true);
   }
 
   public getSelectedTowerType(): string | null {
@@ -120,7 +129,8 @@ export class PlacementState extends State<TowerDefenceGame> {
    * This is called when the player clicks to place a tower
    */
   public handlePlacementRequest(towerType: string, x: number, y: number): void {
-    const towerData = this._context.ui.towerTypes.get(towerType);
+    const ui = ServiceLocator.get<UIService>('UI').ui;
+    const towerData = ui.towerTypes.get(towerType);
     if (!towerData) {
       console.log('❌ Tower data not found for type:', towerType);
       return;
@@ -147,59 +157,13 @@ export class PlacementState extends State<TowerDefenceGame> {
     }
 
     // ============================================================
-    // RULE 3: Create tower entity and add to game
+    // RULE 3: Create tower entity and add to game using TowerService
     // ============================================================
-    const tower = this._createTowerEntity(x, y, towerData, towerType);
-    this._context.placedTowers.push(tower);
-    console.log('✅ Tower placed! Total towers:', this._context.placedTowers.length);
+    towerService.createAndPlaceTower(x, y, towerType, towerData);
 
     // ============================================================
     // RULE 4: Exit placement mode after successful placement
     // ============================================================
-    const placementService = ServiceLocator.get<IPlacementService>('PlacementService');
-    placementService.exitPlacementMode();
-  }
-
-  private _createTowerEntity(x: number, y: number, towerData: any, towerType: string): Entity {
-    const tower = this._context.world.createEntity('Tower');
-    
-    const size = 30;
-    // Center the tower on the cursor position
-    const centerX = x - size / 2;
-    const centerY = y - size / 2;
-    
-    // Add transform (top-left corner for rendering)
-    const transform = new TransformComponent(centerX, centerY);
-    tower.addComponent(transform);
-
-    // Add tower component
-    const towerComp = new TowerComponent(towerData.stats, towerData.color);
-    tower.addComponent(towerComp);
-
-    // Add chain lightning component if this is an electric tower
-    if (towerType === 'electric') {
-      const chainLightningTower = new ChainLightningTowerComponent(4, 150);
-      tower.addComponent(chainLightningTower);
-    }
-
-    // Add renderable (no range circle by default)
-    const renderable = new RenderableComponent();
-    renderable.graphics.rect(0, 0, size, size);
-    renderable.graphics.fill(towerData.color);
-    tower.addComponent(renderable);
-    
-    // Add selectable component
-    const selectable = new SelectableComponent();
-    tower.addComponent(selectable);
-    
-    // Add interactable component for clicking
-    const interactable = new InteractableComponent(size, size);
-    interactable.onClick = () => {
-      const towerService = ServiceLocator.get<TowerService>('TowerService');
-      towerService.onTowerClicked(tower);
-    };
-    tower.addComponent(interactable);
-    
-    return tower;
+    this._context.gameStateMachine.setState('playing')
   }
 }

@@ -1,0 +1,107 @@
+{
+  "towers": {
+    "basic": {
+      "id": "basic",
+      "name": "Basic Tower",
+      "description": "Standard defense tower with balanced stats",
+      "stats": {
+        "damage": 10,
+        "range": 100,
+        "fireRate": 1.0,
+        "projectileSpeed": 200,
+        "cost": 100
+      },
+      "color": 10092442,
+      "visualTier": 0
+    },
+    "chainLightning": {
+      "id": "chainLightning",
+      "name": "Chain Lightning Tower",
+      "description": "Shoots lightning that chains between enemies",
+      "stats": {
+        "damage": 15,
+        "range": 120,
+        "fireRate": 0.8,
+        "projectileSpeed": 300,
+        "cost": 200
+      },
+      "color": 10092543,
+      "visualTier": 0,
+      "special": {
+        "type": "chainLightning",
+        "maxChains": 3,
+        "chainRange": 80
+      }
+    },
+    "electric": {
+      "id": "electric",
+      "name": "Electric Tower",
+      "description": "Shoots lightning that chains between enemies",
+      "stats": {
+        "damage": 15,
+        "range": 120,
+        "fireRate": 0.8,
+        "projectileSpeed": 350,
+        "cost": 200
+      },
+      "color": 65535,
+      "visualTier": 0,
+      "special": {
+        "type": "chainLightning",
+        "maxChains": 3,
+        "chainRange": 80
+      }
+    },
+    "flamethrower": {
+      "id": "flamethrower",
+      "name": "Flamethrower Tower",
+      "description": "Deals area damage in a cone",
+      "stats": {
+        "damage": 5,
+        "range": 80,
+        "fireRate": 10.0,
+        "projectileSpeed": 0,
+        "cost": 150
+      },
+      "color": 16744192,
+      "visualTier": 0,
+      "special": {
+        "type": "flamethrower",
+        "coneAngle": 60,
+        "coneLength": 80
+      }
+    },
+    "sniper": {
+      "id": "sniper",
+      "name": "Sniper Tower",
+      "description": "Long range, high damage, slow fire rate",
+      "stats": {
+        "damage": 50,
+        "range": 200,
+        "fireRate": 0.5,
+        "projectileSpeed": 500,
+        "cost": 250
+      },
+      "color": 6737151,
+      "visualTier": 0,
+      "special": {
+        "type": "piercing",
+        "piercing": 2
+      }
+    },
+    "rapid": {
+      "id": "rapid",
+      "name": "Rapid Fire Tower",
+      "description": "Shoots many weak projectiles quickly",
+      "stats": {
+        "damage": 3,
+        "range": 90,
+        "fireRate": 5.0,
+        "projectileSpeed": 250,
+        "cost": 180
+      },
+      "color": 16776960,
+      "visualTier": 0
+    }
+  }
+}

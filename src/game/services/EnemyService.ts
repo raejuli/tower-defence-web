@@ -3,17 +3,19 @@
  */
 
 import { IEnemyService } from './IGameServices';
-import { ServiceLocator } from '../../engine/services/ServiceLocator';
+import { ServiceLocator } from '@raejuli/core-engine-gdk/services';
+import { EventBus } from '@raejuli/core-engine-gdk/events';
 import { IGameStateService } from './IGameServices';
-import { World } from '../../engine/ecs/World';
-import { TransformComponent } from '../../engine/components/TransformComponent';
-import { RenderableComponent } from '../../engine/components/RenderableComponent';
-import { StateMachineComponent } from '../../engine/components/StateMachineComponent';
-import { EnemyComponent } from '../components/EnemyComponent';
-import { PathFollowerComponent } from '../components/PathFollowerComponent';
+import { World } from '@raejuli/core-engine-gdk/ecs';
+import { TransformComponent } from '@raejuli/core-engine-gdk/components';
+import { RenderableComponent } from '@raejuli/core-engine-gdk/components';
+import { StateMachineComponent } from '@raejuli/core-engine-gdk/components';
+import { InteractableComponent } from '@raejuli/core-engine-gdk/components';
+import { EnemyComponent } from '../components/enemy/EnemyComponent';
+import { PathFollowerComponent } from '../components/enemy/PathFollowerComponent';
 import { WaveStateModel } from '../models/WaveStateModel';
 import { LevelModel } from '../models/LevelModel';
-import { Entity } from '../../engine/ecs/Entity';
+import { Entity } from '@raejuli/core-engine-gdk/ecs';
 import {
   EnemyMovingState,
   EnemyDamagedState,
@@ -22,12 +24,21 @@ import {
   EnemyDeadState,
   EnemyReachedEndState
 } from '../states/EnemyStates';
+import { UIService } from './UIService';
 
 export class EnemyService implements IEnemyService {
   private _world: World | null = null;
   private _waveState: WaveStateModel | null = null;
   private _level: LevelModel | null = null;
   private _pathEntity: Entity | null = null;
+  private _events: EventBus;
+
+  constructor() {
+    // Get global event bus from ServiceLocator
+    this._events = ServiceLocator.get<EventBus>('EventBus');
+
+    this._events.on<Entity>('enemy:clicked', (enemy: Entity) => ServiceLocator.get<UIService>('UI').ui.showEnemyDetails(enemy));
+  }
 
   public setDependencies(world: World, waveState: WaveStateModel, level: LevelModel, pathEntity: Entity): void {
     this._world = world;
@@ -85,6 +96,14 @@ export class EnemyService implements IEnemyService {
     renderable.graphics.rect(0, 0, enemySize, enemySize);
     renderable.graphics.fill(0xff0000);
     enemy.addComponent(renderable);
+
+    // Add interactable component for clicking
+    const interactable = new InteractableComponent(enemySize, enemySize);
+    interactable.onClick = () => {
+      // Emit enemy:clicked event instead of calling callback
+      this._events.emit('enemy:clicked', enemy);
+    };
+    enemy.addComponent(interactable);
 
     // Add state machine with all enemy states
     const stateMachine = new StateMachineComponent(enemy);

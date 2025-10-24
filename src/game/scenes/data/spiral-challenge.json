@@ -1,0 +1,110 @@
+{
+  "metadata": {
+    "id": "spiral-challenge",
+    "name": "Spiral Challenge",
+    "description": "A spiral path that tests your tower placement strategy.",
+    "version": "1.0.0"
+  },
+  "config": {
+    "width": 800,
+    "height": 600,
+    "backgroundColor": 1715486
+  },
+  "entities": [
+    {
+      "id": "game-state",
+      "name": "Game State",
+      "type": "gamestate",
+      "active": true,
+      "components": [
+        {
+          "type": "GameState",
+          "data": {
+            "difficulty": "medium",
+            "startingMoney": 400,
+            "startingLives": 15,
+            "maxWaves": 8,
+            "enemiesPerWave": 8,
+            "enemyHealth": 75,
+            "enemySpeed": 60,
+            "enemyDamage": 2,
+            "enemyReward": 30,
+            "spawnInterval": 0.8,
+            "idleDuration": 8.0
+          }
+        }
+      ]
+    },
+    {
+      "id": "path-main",
+      "name": "Main Path",
+      "type": "path",
+      "active": true,
+      "components": [
+        {
+          "type": "Transform",
+          "data": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "type": "PathComponent",
+          "data": {
+            "waypoints": [
+              { "x": 0, "y": 300 },
+              { "x": 150, "y": 300 },
+              { "x": 150, "y": 150 },
+              { "x": 450, "y": 150 },
+              { "x": 450, "y": 450 },
+              { "x": 250, "y": 450 },
+              { "x": 250, "y": 250 },
+              { "x": 600, "y": 250 },
+              { "x": 600, "y": 500 },
+              { "x": 800, "y": 500 }
+            ],
+            "pathWidth": 30,
+            "color": 2763326
+          }
+        },
+        {
+          "type": "Renderable",
+          "data": {}
+        }
+      ]
+    },
+    {
+      "id": "spawner-main",
+      "name": "Main Spawner",
+      "type": "spawner",
+      "active": true,
+      "components": [
+        {
+          "type": "Transform",
+          "data": {
+            "x": 0,
+            "y": 300
+          }
+        },
+        {
+          "type": "WaveSpawner",
+          "data": {
+            "maxWaves": 8,
+            "enemiesPerWave": 8,
+            "spawnInterval": 0.8,
+            "idleDuration": 8.0,
+            "enemyHealth": 75,
+            "enemySpeed": 60,
+            "enemyDamage": 2,
+            "enemyReward": 30,
+            "pathEntityId": "path-main"
+          }
+        },
+        {
+          "type": "StateMachine",
+          "data": {}
+        }
+      ]
+    }
+  ]
+}

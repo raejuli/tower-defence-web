@@ -3,15 +3,15 @@
  * Core logic for tower targeting and shooting
  */
 
-import { System } from '../../engine/ecs/System';
-import { World } from '../../engine/ecs/World';
-import { Entity } from '../../engine/ecs/Entity';
-import { TowerComponent } from '../components/TowerComponent';
-import { TransformComponent } from '../../engine/components/TransformComponent';
-import { ProjectileComponent } from '../components/ProjectileComponent';
-import { RenderableComponent } from '../../engine/components/RenderableComponent';
-import { ChainLightningComponent } from '../components/ChainLightningComponent';
-import { ChainLightningTowerComponent } from '../components/ChainLightningTowerComponent';
+import { System } from '@raejuli/core-engine-gdk/ecs';
+import { World } from '@raejuli/core-engine-gdk/ecs';
+import { Entity } from '@raejuli/core-engine-gdk/ecs';
+import { TowerComponent } from '../components/tower/TowerComponent';
+import { TransformComponent } from '@raejuli/core-engine-gdk/components';
+import { ProjectileComponent } from '../components/projectile/ProjectileComponent';
+import { RenderableComponent } from '@raejuli/core-engine-gdk/components';
+import { ChainLightningComponent } from '../components/projectile/ChainLightningComponent';
+import { ChainLightningTowerComponent } from '../components/tower/ChainLightningTowerComponent';
 
 export class TowerSystem extends System {
   constructor(world: World) {

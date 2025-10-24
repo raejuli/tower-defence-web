@@ -18,6 +18,9 @@
   ],
   "author": "",
   "license": "MIT",
+  "dependencies": {
+    "@raejuli/core-engine-gdk": "file:../core-engine-gdk"
+  },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "pixi.js": "^8.0.0",

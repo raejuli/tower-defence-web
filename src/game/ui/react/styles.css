@@ -1,0 +1,39 @@
+/**
+ * Global styles for React UI views
+ */
+
+.hud-view,
+.shop-view {
+  pointer-events: auto;
+}
+
+.hud-view .hud,
+.shop-view .shop {
+  pointer-events: auto;
+}
+
+.scene-select-view,
+.game-over-view,
+.game-win-view {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: none;
+  pointer-events: auto;
+}
+
+.scene-select-view.visible,
+.game-over-view.visible,
+.game-win-view.visible {
+  display: flex !important;
+}
+
+#tower-details-view {
+  pointer-events: auto;
+}
+
+#tower-details-view:not(.visible) {
+  display: none;
+}

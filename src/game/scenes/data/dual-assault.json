@@ -1,0 +1,179 @@
+{
+  "metadata": {
+    "id": "dual-assault",
+    "name": "Dual Assault",
+    "description": "Two waves of enemies attack from different paths! The second wave starts 5 seconds after the first.",
+    "version": "1.0.0"
+  },
+  "config": {
+    "width": 800,
+    "height": 600,
+    "backgroundColor": 1715486
+  },
+  "entities": [
+    {
+      "id": "game-state",
+      "name": "Game State",
+      "type": "gamestate",
+      "active": true,
+      "components": [
+        {
+          "type": "GameState",
+          "data": {
+            "difficulty": "medium",
+            "startingMoney": 600,
+            "startingLives": 20,
+            "maxWaves": 8,
+            "enemiesPerWave": 10,
+            "enemyHealth": 80,
+            "enemySpeed": 55,
+            "enemyDamage": 2,
+            "enemyReward": 30,
+            "spawnInterval": 0.9,
+            "idleDuration": 8.0
+          }
+        }
+      ]
+    },
+    {
+      "id": "path-north",
+      "name": "North Path",
+      "type": "path",
+      "active": true,
+      "components": [
+        {
+          "type": "Transform",
+          "data": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "type": "PathComponent",
+          "data": {
+            "waypoints": [
+              { "x": 0, "y": 100 },
+              { "x": 200, "y": 100 },
+              { "x": 200, "y": 250 },
+              { "x": 400, "y": 250 },
+              { "x": 400, "y": 150 },
+              { "x": 600, "y": 150 },
+              { "x": 600, "y": 300 },
+              { "x": 800, "y": 300 }
+            ],
+            "pathWidth": 30,
+            "color": 2763326
+          }
+        },
+        {
+          "type": "Renderable",
+          "data": {}
+        }
+      ]
+    },
+    {
+      "id": "path-south",
+      "name": "South Path",
+      "type": "path",
+      "active": true,
+      "components": [
+        {
+          "type": "Transform",
+          "data": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "type": "PathComponent",
+          "data": {
+            "waypoints": [
+              { "x": 0, "y": 500 },
+              { "x": 250, "y": 500 },
+              { "x": 250, "y": 350 },
+              { "x": 450, "y": 350 },
+              { "x": 450, "y": 450 },
+              { "x": 650, "y": 450 },
+              { "x": 650, "y": 300 },
+              { "x": 800, "y": 300 }
+            ],
+            "pathWidth": 30,
+            "color": 11206570
+          }
+        },
+        {
+          "type": "Renderable",
+          "data": {}
+        }
+      ]
+    },
+    {
+      "id": "spawner-north",
+      "name": "North Spawner",
+      "type": "spawner",
+      "active": true,
+      "components": [
+        {
+          "type": "Transform",
+          "data": {
+            "x": 0,
+            "y": 100
+          }
+        },
+        {
+          "type": "WaveSpawner",
+          "data": {
+            "maxWaves": 8,
+            "enemiesPerWave": 6,
+            "spawnInterval": 0.9,
+            "idleDuration": 8.0,
+            "waveStartDelay": 0,
+            "enemyHealth": 80,
+            "enemySpeed": 55,
+            "enemyDamage": 2,
+            "enemyReward": 30,
+            "pathEntityId": "path-north"
+          }
+        },
+        {
+          "type": "StateMachine",
+          "data": {}
+        }
+      ]
+    },
+    {
+      "id": "spawner-south",
+      "name": "South Spawner",
+      "type": "spawner",
+      "active": true,
+      "components": [
+        {
+          "type": "Transform",
+          "data": {
+            "x": 0,
+            "y": 500
+          }
+        },
+        {
+          "type": "WaveSpawner",
+          "data": {
+            "maxWaves": 8,
+            "enemiesPerWave": 4,
+            "spawnInterval": 1.2,
+            "idleDuration": 8.0,
+            "waveStartDelay": 5.0,
+            "enemyHealth": 100,
+            "enemySpeed": 45,
+            "enemyDamage": 3,
+            "enemyReward": 40,
+            "pathEntityId": "path-south"
+          }
+        },
+        {
+          "type": "StateMachine",
+          "data": {}
+        }
+      ]
+    }
+  ]
+}

@@ -3,6 +3,7 @@
  */
 
 import { TowerDefenceGame } from "./game/TowerDefenceGame";
+import { initializeGameSystems } from "./game/init/GameInitializer";
 
 async function main() {
   // Create game container
@@ -11,6 +12,10 @@ async function main() {
     console.error('Game container not found!');
     return;
   }
+
+  // Initialize serialization system and load JSON scenes
+  console.log('🎮 Initializing game systems...');
+  await initializeGameSystems();
 
   // Check for debug mode (via URL parameter or localStorage)
   const urlParams = new URLSearchParams(window.location.search);

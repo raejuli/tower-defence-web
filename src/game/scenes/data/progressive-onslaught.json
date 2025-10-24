@@ -1,0 +1,423 @@
+{
+  "metadata": {
+    "id": "progressive-onslaught",
+    "name": "Progressive Onslaught",
+    "description": "Waves that evolve! Starts simple, adds spawners, changes enemy types. Can you adapt?",
+    "version": "1.0.0"
+  },
+  "config": {
+    "width": 800,
+    "height": 600,
+    "backgroundColor": 1715230
+  },
+  "entities": [
+    {
+      "id": "game-state",
+      "name": "Game State",
+      "type": "gamestate",
+      "active": true,
+      "components": [
+        {
+          "type": "GameState",
+          "data": {
+            "difficulty": "hard",
+            "startingMoney": 700,
+            "startingLives": 25,
+            "maxWaves": 10,
+            "enemiesPerWave": 15,
+            "enemyHealth": 100,
+            "enemySpeed": 60,
+            "enemyDamage": 2,
+            "enemyReward": 35,
+            "spawnInterval": 1.0,
+            "idleDuration": 10.0
+          }
+        }
+      ]
+    },
+    {
+      "id": "wave-progression",
+      "name": "Wave Progression Controller",
+      "type": "waveprogression",
+      "active": true,
+      "components": [
+        {
+          "type": "WaveProgression",
+          "data": {
+            "defaultEnemyType": "basic",
+            "enemyTypes": [
+              {
+                "type": "basic",
+                "health": 80,
+                "speed": 50,
+                "damage": 1,
+                "reward": 25
+              },
+              {
+                "type": "fast",
+                "health": 60,
+                "speed": 80,
+                "damage": 1,
+                "reward": 30
+              },
+              {
+                "type": "tank",
+                "health": 200,
+                "speed": 30,
+                "damage": 3,
+                "reward": 50
+              },
+              {
+                "type": "elite",
+                "health": 150,
+                "speed": 60,
+                "damage": 2,
+                "reward": 60
+              },
+              {
+                "type": "boss",
+                "health": 500,
+                "speed": 40,
+                "damage": 5,
+                "reward": 150
+              }
+            ],
+            "waves": [
+              {
+                "waveNumber": 1,
+                "idleDuration": 10.0,
+                "spawners": [
+                  {
+                    "id": "north-main",
+                    "pathId": "path-north",
+                    "enabled": true,
+                    "startDelay": 0,
+                    "spawnInterval": 1.5,
+                    "enemyType": "basic",
+                    "enemyCount": 5
+                  }
+                ]
+              },
+              {
+                "waveNumber": 2,
+                "idleDuration": 10.0,
+                "spawners": [
+                  {
+                    "id": "north-main",
+                    "pathId": "path-north",
+                    "enabled": true,
+                    "startDelay": 0,
+                    "spawnInterval": 1.2,
+                    "enemyType": "basic",
+                    "enemyCount": 8
+                  }
+                ]
+              },
+              {
+                "waveNumber": 3,
+                "idleDuration": 10.0,
+                "spawners": [
+                  {
+                    "id": "north-main",
+                    "pathId": "path-north",
+                    "enabled": true,
+                    "startDelay": 0,
+                    "spawnInterval": 1.0,
+                    "enemyType": "basic",
+                    "enemyCount": 6
+                  },
+                  {
+                    "id": "north-fast",
+                    "pathId": "path-north",
+                    "enabled": true,
+                    "startDelay": 3.0,
+                    "spawnInterval": 0.8,
+                    "enemyType": "fast",
+                    "enemyCount": 4
+                  }
+                ]
+              },
+              {
+                "waveNumber": 4,
+                "idleDuration": 10.0,
+                "spawners": [
+                  {
+                    "id": "north-main",
+                    "pathId": "path-north",
+                    "enabled": true,
+                    "startDelay": 0,
+                    "spawnInterval": 1.0,
+                    "enemyType": "basic",
+                    "enemyCount": 5
+                  },
+                  {
+                    "id": "south-main",
+                    "pathId": "path-south",
+                    "enabled": true,
+                    "startDelay": 5.0,
+                    "spawnInterval": 1.5,
+                    "enemyType": "tank",
+                    "enemyCount": 3
+                  }
+                ]
+              },
+              {
+                "waveNumber": 5,
+                "idleDuration": 10.0,
+                "spawners": [
+                  {
+                    "id": "north-main",
+                    "pathId": "path-north",
+                    "enabled": true,
+                    "startDelay": 0,
+                    "spawnInterval": 0.9,
+                    "enemyType": "fast",
+                    "enemyCount": 8
+                  },
+                  {
+                    "id": "south-main",
+                    "pathId": "path-south",
+                    "enabled": true,
+                    "startDelay": 4.0,
+                    "spawnInterval": 1.0,
+                    "enemyType": "basic",
+                    "enemyCount": 6
+                  }
+                ]
+              },
+              {
+                "waveNumber": 6,
+                "idleDuration": 8.0,
+                "spawners": [
+                  {
+                    "id": "north-main",
+                    "pathId": "path-north",
+                    "enabled": true,
+                    "startDelay": 0,
+                    "spawnInterval": 0.8,
+                    "enemyType": "elite",
+                    "enemyCount": 5
+                  },
+                  {
+                    "id": "south-main",
+                    "pathId": "path-south",
+                    "enabled": true,
+                    "startDelay": 3.0,
+                    "spawnInterval": 1.2,
+                    "enemyType": "tank",
+                    "enemyCount": 4
+                  },
+                  {
+                    "id": "north-fast",
+                    "pathId": "path-north",
+                    "enabled": true,
+                    "startDelay": 6.0,
+                    "spawnInterval": 0.6,
+                    "enemyType": "fast",
+                    "enemyCount": 6
+                  }
+                ]
+              },
+              {
+                "waveNumber": 7,
+                "idleDuration": 8.0,
+                "spawners": [
+                  {
+                    "id": "north-main",
+                    "pathId": "path-north",
+                    "enabled": true,
+                    "startDelay": 0,
+                    "spawnInterval": 0.7,
+                    "enemyType": "elite",
+                    "enemyCount": 6
+                  },
+                  {
+                    "id": "south-main",
+                    "pathId": "path-south",
+                    "enabled": true,
+                    "startDelay": 2.0,
+                    "spawnInterval": 1.0,
+                    "enemyType": "tank",
+                    "enemyCount": 5
+                  }
+                ],
+                "modifiers": {
+                  "globalSpeedMultiplier": 1.2
+                }
+              },
+              {
+                "waveNumber": 8,
+                "idleDuration": 8.0,
+                "spawners": [
+                  {
+                    "id": "north-main",
+                    "pathId": "path-north",
+                    "enabled": true,
+                    "startDelay": 0,
+                    "spawnInterval": 0.6,
+                    "enemyType": "fast",
+                    "enemyCount": 10
+                  },
+                  {
+                    "id": "south-main",
+                    "pathId": "path-south",
+                    "enabled": true,
+                    "startDelay": 3.0,
+                    "spawnInterval": 0.8,
+                    "enemyType": "elite",
+                    "enemyCount": 7
+                  }
+                ],
+                "modifiers": {
+                  "globalHealthMultiplier": 1.3
+                }
+              },
+              {
+                "waveNumber": 9,
+                "idleDuration": 10.0,
+                "spawners": [
+                  {
+                    "id": "north-main",
+                    "pathId": "path-north",
+                    "enabled": true,
+                    "startDelay": 0,
+                    "spawnInterval": 1.0,
+                    "enemyType": "tank",
+                    "enemyCount": 5
+                  },
+                  {
+                    "id": "south-main",
+                    "pathId": "path-south",
+                    "enabled": true,
+                    "startDelay": 2.0,
+                    "spawnInterval": 0.7,
+                    "enemyType": "elite",
+                    "enemyCount": 8
+                  },
+                  {
+                    "id": "north-fast",
+                    "pathId": "path-north",
+                    "enabled": true,
+                    "startDelay": 5.0,
+                    "spawnInterval": 0.5,
+                    "enemyType": "fast",
+                    "enemyCount": 10
+                  }
+                ]
+              },
+              {
+                "waveNumber": 10,
+                "idleDuration": 15.0,
+                "spawners": [
+                  {
+                    "id": "boss-north",
+                    "pathId": "path-north",
+                    "enabled": true,
+                    "startDelay": 0,
+                    "spawnInterval": 3.0,
+                    "enemyType": "boss",
+                    "enemyCount": 2
+                  },
+                  {
+                    "id": "north-support",
+                    "pathId": "path-north",
+                    "enabled": true,
+                    "startDelay": 8.0,
+                    "spawnInterval": 0.6,
+                    "enemyType": "elite",
+                    "enemyCount": 10
+                  },
+                  {
+                    "id": "south-support",
+                    "pathId": "path-south",
+                    "enabled": true,
+                    "startDelay": 10.0,
+                    "spawnInterval": 0.5,
+                    "enemyType": "fast",
+                    "enemyCount": 15
+                  }
+                ],
+                "modifiers": {
+                  "globalHealthMultiplier": 1.5,
+                  "globalRewardMultiplier": 2.0
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "path-north",
+      "name": "North Path",
+      "type": "path",
+      "active": true,
+      "components": [
+        {
+          "type": "Transform",
+          "data": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "type": "PathComponent",
+          "data": {
+            "waypoints": [
+              { "x": 0, "y": 150 },
+              { "x": 250, "y": 150 },
+              { "x": 250, "y": 300 },
+              { "x": 500, "y": 300 },
+              { "x": 500, "y": 200 },
+              { "x": 700, "y": 200 },
+              { "x": 700, "y": 300 },
+              { "x": 800, "y": 300 }
+            ],
+            "pathWidth": 30,
+            "color": 2763326
+          }
+        },
+        {
+          "type": "Renderable",
+          "data": {}
+        }
+      ]
+    },
+    {
+      "id": "path-south",
+      "name": "South Path",
+      "type": "path",
+      "active": true,
+      "components": [
+        {
+          "type": "Transform",
+          "data": {
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "type": "PathComponent",
+          "data": {
+            "waypoints": [
+              { "x": 0, "y": 450 },
+              { "x": 200, "y": 450 },
+              { "x": 200, "y": 350 },
+              { "x": 400, "y": 350 },
+              { "x": 400, "y": 500 },
+              { "x": 600, "y": 500 },
+              { "x": 600, "y": 300 },
+              { "x": 800, "y": 300 }
+            ],
+            "pathWidth": 30,
+            "color": 11206570
+          }
+        },
+        {
+          "type": "Renderable",
+          "data": {}
+        }
+      ]
+    }
+  ]
+}

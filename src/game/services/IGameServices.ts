@@ -2,7 +2,7 @@
  * Game Services - Interfaces for core game services
  */
 
-import { Entity } from '../../engine/ecs/Entity';
+import { Entity } from '@raejuli/core-engine-gdk/ecs';
 
 export interface IGameStateService {
   addMoney(amount: number): void;
@@ -28,11 +28,11 @@ export interface ITowerService {
   canPlaceTower(x: number, y: number): boolean;
   isPositionOnPath(x: number, y: number, size?: number): boolean;
   isPositionOccupied(x: number, y: number, size?: number): boolean;
+  createAndPlaceTower(x: number, y: number, towerType: string, towerData: any): Entity;
+  clearAllTowers(): void;
 }
 
 export interface IPlacementService {
   updatePreview(x: number, y: number, range: number, canPlace: boolean): void;
   hidePreview(): void;
-  enterPlacementMode(towerType: string, range: number): void;
-  exitPlacementMode(): void;
 }

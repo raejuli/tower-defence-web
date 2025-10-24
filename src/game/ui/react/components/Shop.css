@@ -1,0 +1,72 @@
+.shop {
+  background: rgba(0, 0, 0, 0.8);
+  padding: 10px;
+  border-radius: 5px;
+  color: white;
+  font-family: Arial, sans-serif;
+}
+
+.shop h3 {
+  margin-top: 0;
+}
+
+.tower-buttons {
+  margin: 10px 0;
+}
+
+.tower-button {
+  display: block;
+  margin: 5px 0;
+  padding: 10px;
+  background: #333;
+  border: 2px solid #666;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: white;
+}
+
+.tower-button:hover {
+  background: #444;
+  border-color: #888;
+  transform: translateY(-2px);
+}
+
+.tower-button.selected {
+  border-color: #0f0;
+  background: #264;
+}
+
+.tower-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tower-color {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+  border-radius: 3px;
+  vertical-align: middle;
+}
+
+.controls {
+  margin-top: 10px;
+}
+
+.control-button {
+  padding: 8px 15px;
+  margin: 5px 0;
+  width: 100%;
+  background: #333;
+  border: 2px solid #666;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.control-button:hover {
+  background: #444;
+}

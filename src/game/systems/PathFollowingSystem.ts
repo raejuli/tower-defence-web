@@ -3,13 +3,13 @@
  * Core logic for enemy path movement
  */
 
-import { System } from '../../engine/ecs/System';
-import { World } from '../../engine/ecs/World';
-import { Entity } from '../../engine/ecs/Entity';
-import { PathFollowerComponent } from '../components/PathFollowerComponent';
-import { PathComponent } from '../components/PathComponent';
-import { TransformComponent } from '../../engine/components/TransformComponent';
-import { EnemyComponent } from '../components/EnemyComponent';
+import { System } from '@raejuli/core-engine-gdk/ecs';
+import { World } from '@raejuli/core-engine-gdk/ecs';
+import { Entity } from '@raejuli/core-engine-gdk/ecs';
+import { PathFollowerComponent } from '../components/enemy/PathFollowerComponent';
+import { PathComponent } from '../components/enemy/PathComponent';
+import { TransformComponent } from '@raejuli/core-engine-gdk/components';
+import { EnemyComponent } from '../components/enemy/EnemyComponent';
 
 export class PathFollowingSystem extends System {
   constructor(world: World) {

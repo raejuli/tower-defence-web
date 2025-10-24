@@ -2,10 +2,8 @@
  * Core Systems - Rendering System
  */
 
-import { System } from '../ecs/System';
-import { World } from '../ecs/World';
-import { TransformComponent } from '../components/TransformComponent';
-import { RenderableComponent } from '../components/RenderableComponent';
+import { RenderableComponent, TransformComponent } from '@raejuli/core-engine-gdk';
+import { System, World } from '@raejuli/core-engine-gdk/ecs';
 import { Container } from 'pixi.js';
 
 export class RenderSystem extends System {

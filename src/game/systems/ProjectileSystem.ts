@@ -3,13 +3,13 @@
  * Core logic for projectile movement and collision
  */
 
-import { System } from '../../engine/ecs/System';
-import { World } from '../../engine/ecs/World';
-import { Entity } from '../../engine/ecs/Entity';
-import { ProjectileComponent } from '../components/ProjectileComponent';
-import { TransformComponent } from '../../engine/components/TransformComponent';
-import { EnemyComponent } from '../components/EnemyComponent';
-import { ChainLightningComponent } from '../components/ChainLightningComponent';
+import { System } from '@raejuli/core-engine-gdk/ecs';
+import { World } from '@raejuli/core-engine-gdk/ecs';
+import { Entity } from '@raejuli/core-engine-gdk/ecs';
+import { ProjectileComponent } from '../components/projectile/ProjectileComponent';
+import { TransformComponent } from '@raejuli/core-engine-gdk/components';
+import { EnemyComponent } from '../components/enemy/EnemyComponent';
+import { ChainLightningComponent } from '../components/projectile/ChainLightningComponent';
 
 export class ProjectileSystem extends System {
   constructor(world: World) {

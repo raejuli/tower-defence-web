@@ -2,8 +2,8 @@
  * Tower States - For state machine
  */
 
-import { State } from '../../engine/state/StateMachine';
-import { Entity } from '../../engine/ecs/Entity';
+import { State } from '@raejuli/core-engine-gdk/state';
+import { Entity } from '@raejuli/core-engine-gdk/ecs';
 
 export class TowerIdleState extends State<Entity> {
   onEnter(): void {

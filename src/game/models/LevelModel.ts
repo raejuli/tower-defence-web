@@ -2,7 +2,7 @@
  * Game Models - Level/Map Configuration
  */
 
-import { PathPoint } from '../components/PathComponent';
+import { PathPoint } from '../components/enemy/PathComponent';
 
 export interface PathBounds {
   x: number;

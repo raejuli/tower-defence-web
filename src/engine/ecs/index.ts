@@ -1,8 +1,0 @@
-/**
- * Core ECS exports
- */
-
-export { Component } from './Component';
-export { Entity } from './Entity';
-export { System } from './System';
-export { World } from './World';

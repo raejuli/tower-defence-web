@@ -4,17 +4,22 @@
  * This state defines HOW the game plays - the actual game rules
  */
 
-import { State } from '../../engine/state/StateMachine';
+import { State } from '@raejuli/core-engine-gdk/state';
 import { TowerDefenceGame } from '../TowerDefenceGame';
-import { ServiceLocator } from '../../engine/services/ServiceLocator';
+import { ServiceLocator } from '@raejuli/core-engine-gdk/services';
 import { ITowerService, IPlacementService, IGameStateService } from '../services/IGameServices';
-import { StateMachineSystem } from '../../engine/systems/StateMachineSystem';
+import { StateMachineSystem } from '@raejuli/core-engine-gdk/systems';
 import { TowerSystem } from '../systems/TowerSystem';
 import { ProjectileSystem } from '../systems/ProjectileSystem';
 import { PathFollowingSystem } from '../systems/PathFollowingSystem';
+import { FlamethrowerSystem } from '../systems/FlamethrowerSystem';
 import { TowerSelectionSystem } from '../systems/TowerSelectionSystem';
-import { StateMachineComponent } from '../../engine/components/StateMachineComponent';
-import { EnemyComponent } from '../components/EnemyComponent';
+import { StateMachineComponent } from '@raejuli/core-engine-gdk/components';
+import { EnemyComponent } from '../components/enemy/EnemyComponent';
+import { WaveSpawnerComponent } from '../components/enemy/WaveSpawnerComponent';
+import { PlacementState } from './PlacementState';
+import { UIService } from '../services/UIService';
+import { ClickHandlerSystem } from '../../engine';
 
 /**
  * PLAYING STATE BEHAVIOUR TREE
@@ -35,24 +40,41 @@ import { EnemyComponent } from '../components/EnemyComponent';
 export class PlayingState extends State<TowerDefenceGame> {
   private _towerSelectedHandler: ((data: any) => void) | null = null;
   private _towerDeselectedHandler: (() => void) | null = null;
+  private _waveAllCompleteHandler: ((data: any) => void) | null = null;
 
   public onEnter(previousState?: State<TowerDefenceGame>): void {
+    const ui = ServiceLocator.get<UIService>('UI').ui;
     console.log('🎮 Game is playing - Combat rules active');
     
     // Register UI event listeners for tower selection
     this._towerSelectedHandler = (data: any) => {
-      const placementService = ServiceLocator.get<IPlacementService>('PlacementService');
-      placementService.enterPlacementMode(data.towerType, data.range);
+      const state = this._context.gameStateMachine.getState('placement') as PlacementState;
+      state.setSelectedTowerType(data.towerType, data.range);
+      this._context.gameStateMachine.setState('placement');
     };
     
     this._towerDeselectedHandler = () => {
       const towerService = ServiceLocator.get<ITowerService>('TowerService');
       towerService.deselectAllTowers();
-      this.context.ui.hideTowerDetails();
+      ui.hideTowerDetails();
+      
+      // Update tower graphics immediately to hide range circles
+      const towerSelectionSystem = this.context.world.getSystem(TowerSelectionSystem);
+      if (towerSelectionSystem) {
+        towerSelectionSystem.updateTowerGraphics();
+      }
     };
     
-    this.context.ui.on('towerSelected', this._towerSelectedHandler);
-    this.context.ui.on('towerDeselected', this._towerDeselectedHandler);
+    // Listen for wave completion events from spawner entities
+    this._waveAllCompleteHandler = (data: any) => {
+      console.log(`🎉 Spawner ${data.spawnerName} completed all waves!`);
+      // Check if all spawners are complete and no enemies remain
+      this._checkWaveBasedVictory();
+    };
+    
+    ui.on('towerSelected', this._towerSelectedHandler);
+    ui.on('towerDeselected', this._towerDeselectedHandler);
+    this.context.engine.events.on('wave:allComplete', this._waveAllCompleteHandler);
   }
 
   /**
@@ -62,14 +84,6 @@ export class PlayingState extends State<TowerDefenceGame> {
   public onUpdate(deltaTime: number): void {
     const world = this.context.world;
     const gameState = ServiceLocator.get<IGameStateService>('GameStateService');
-
-    // ============================================================
-    // RULE 1: Update AI - All entities update their state machines
-    // ============================================================
-    const stateMachineSystem = world.getSystem(StateMachineSystem);
-    if (stateMachineSystem) {
-      stateMachineSystem.update(deltaTime);
-    }
 
     // ============================================================
     // RULE 2: Towers Attack - Towers target and shoot enemies
@@ -83,6 +97,15 @@ export class PlayingState extends State<TowerDefenceGame> {
       
       // Towers automatically target and shoot nearest enemy in range
       towerSystem.processTowers(enemies);
+    }
+
+    // ============================================================
+    // RULE 2B: Flamethrower Towers - Apply cone-based damage
+    // ============================================================
+    const flamethrowerSystem = world.getSystem(FlamethrowerSystem);
+    if (flamethrowerSystem) {
+      const enemies = world.getEntitiesWithComponents(['Enemy', 'Transform']);
+      flamethrowerSystem.processFlamethrowers(deltaTime, enemies);
     }
 
     // ============================================================
@@ -157,20 +180,70 @@ export class PlayingState extends State<TowerDefenceGame> {
     if (towerSelectionSystem) {
       towerSelectionSystem.updateTowerGraphics();
     }
+
+    // ============================================================
+    // RULE 7: Check Win/Lose Conditions
+    // ============================================================
+    this._checkGameConditions();
+  }
+
+  /**
+   * RULE: Check if the player has won or lost
+   */
+  private _checkGameConditions(): void {
+    // RULE: If lives reach 0 → Game Over
+    if (this.context.gameState.lives <= 0) {
+      console.log('💀 Lives depleted! Transitioning to Game Over');
+      this.context.gameStateMachine.setState('gameOver');
+      return;
+    }
+
+    // Victory is checked when wave:allComplete event is emitted
+    // See _checkWaveBasedVictory() method
+  }
+
+  /**
+   * RULE: Check wave-based victory for entity spawners
+   * Called when spawners emit wave:allComplete event
+   */
+  private _checkWaveBasedVictory(): void {
+    // Get all spawner entities
+    const spawners = this.context.world.getEntitiesWithComponents(['WaveSpawner']);
+    
+    // Check if all spawners are complete
+    const allComplete = spawners.every(spawner => {
+      const spawnerComp = spawner.getComponent('WaveSpawner') as WaveSpawnerComponent;
+      return spawnerComp && spawnerComp.isComplete();
+    });
+    
+    // Check if no enemies remain
+    const activeEnemies = this.context.world.getEntitiesWithComponents(['Enemy']).length;
+    
+    if (allComplete && activeEnemies === 0) {
+      console.log(`🎉 All spawners completed and no enemies remain! Victory!`);
+      this.context.gameStateMachine.setState('gameWin');
+    }
   }
 
   public onExit(nextState?: State<TowerDefenceGame>): void {
     console.log('⏸️ Exited playing state');
+    const ui = ServiceLocator.get<UIService>('UI').ui;
     
     // Unregister UI event listeners
     if (this._towerSelectedHandler) {
-      this.context.ui.off('towerSelected', this._towerSelectedHandler);
+      ui.off('towerSelected', this._towerSelectedHandler);
       this._towerSelectedHandler = null;
     }
     
     if (this._towerDeselectedHandler) {
-      this.context.ui.off('towerDeselected', this._towerDeselectedHandler);
+      ui.off('towerDeselected', this._towerDeselectedHandler);
       this._towerDeselectedHandler = null;
+    }
+    
+    // Unregister wave event listener
+    if (this._waveAllCompleteHandler) {
+      this.context.engine.events.off('wave:allComplete', this._waveAllCompleteHandler);
+      this._waveAllCompleteHandler = null;
     }
   }
 }

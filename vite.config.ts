@@ -9,8 +9,7 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'index.html'),
-        editor: resolve(__dirname, 'editor-react.html')
+        main: resolve(__dirname, 'index.html')
       }
     }
   },

@@ -1,0 +1,381 @@
+{
+  "upgrades": {
+    "basic": [
+      {
+        "id": "basic_tier1",
+        "name": "Reinforced Barrel",
+        "description": "Increases damage by 5 and range by 10",
+        "tier": 1,
+        "cost": 100,
+        "requirements": [],
+        "statChanges": {
+          "damage": 5,
+          "range": 10
+        },
+        "nextUpgrades": ["basic_tier2_damage", "basic_tier2_speed"],
+        "visualTier": 1
+      },
+      {
+        "id": "basic_tier2_damage",
+        "name": "Heavy Caliber",
+        "description": "Massively increases damage and range",
+        "tier": 2,
+        "cost": 250,
+        "requirements": ["basic_tier1"],
+        "statChanges": {
+          "damage": 20,
+          "range": 20
+        },
+        "nextUpgrades": ["basic_tier3_sniper"],
+        "visualTier": 2
+      },
+      {
+        "id": "basic_tier2_speed",
+        "name": "Rapid Fire Mechanism",
+        "description": "Doubles fire rate",
+        "tier": 2,
+        "cost": 200,
+        "requirements": ["basic_tier1"],
+        "statChanges": {
+          "fireRateMultiplier": 2.0
+        },
+        "nextUpgrades": ["basic_tier3_gatling"],
+        "visualTier": 2
+      },
+      {
+        "id": "basic_tier3_sniper",
+        "name": "Sniper Specialization",
+        "description": "Becomes a long-range sniper tower",
+        "tier": 3,
+        "cost": 500,
+        "requirements": ["basic_tier2_damage"],
+        "statChanges": {
+          "damage": 30,
+          "range": 50,
+          "fireRateMultiplier": 0.5
+        },
+        "specialChanges": {
+          "type": "piercing",
+          "piercing": 2
+        },
+        "visualTier": 3
+      },
+      {
+        "id": "basic_tier3_gatling",
+        "name": "Gatling Gun",
+        "description": "Ultra-fast fire rate with moderate damage",
+        "tier": 3,
+        "cost": 450,
+        "requirements": ["basic_tier2_speed"],
+        "statChanges": {
+          "damage": 5,
+          "fireRateMultiplier": 2.0
+        },
+        "visualTier": 3
+      }
+    ],
+    "chainLightning": [
+      {
+        "id": "chain_tier1",
+        "name": "Amplified Current",
+        "description": "Increases damage and chain count",
+        "tier": 1,
+        "cost": 150,
+        "requirements": [],
+        "statChanges": {
+          "damage": 10
+        },
+        "specialChanges": {
+          "maxChains": 4
+        },
+        "nextUpgrades": ["chain_tier2_range", "chain_tier2_chains"],
+        "visualTier": 1
+      },
+      {
+        "id": "chain_tier2_range",
+        "name": "Extended Arc",
+        "description": "Increases chain range significantly",
+        "tier": 2,
+        "cost": 300,
+        "requirements": ["chain_tier1"],
+        "statChanges": {
+          "range": 30
+        },
+        "specialChanges": {
+          "chainRange": 40
+        },
+        "nextUpgrades": ["chain_tier3_storm"],
+        "visualTier": 2
+      },
+      {
+        "id": "chain_tier2_chains",
+        "name": "Multi-Fork Lightning",
+        "description": "Chains to even more enemies",
+        "tier": 2,
+        "cost": 280,
+        "requirements": ["chain_tier1"],
+        "specialChanges": {
+          "maxChains": 6
+        },
+        "nextUpgrades": ["chain_tier3_storm"],
+        "visualTier": 2
+      },
+      {
+        "id": "chain_tier3_storm",
+        "name": "Lightning Storm",
+        "description": "Ultimate chain lightning power",
+        "tier": 3,
+        "cost": 600,
+        "requirements": ["chain_tier2_range", "chain_tier2_chains"],
+        "statChanges": {
+          "damage": 25,
+          "range": 40
+        },
+        "specialChanges": {
+          "maxChains": 8,
+          "chainRange": 60
+        },
+        "visualTier": 3
+      }
+    ],
+    "electric": [
+      {
+        "id": "electric_tier1",
+        "name": "Amplified Current",
+        "description": "Increases damage and chain count",
+        "tier": 1,
+        "cost": 150,
+        "requirements": [],
+        "statChanges": {
+          "damage": 10
+        },
+        "specialChanges": {
+          "maxChains": 4
+        },
+        "nextUpgrades": ["electric_tier2_range", "electric_tier2_chains"],
+        "visualTier": 1
+      },
+      {
+        "id": "electric_tier2_range",
+        "name": "Extended Arc",
+        "description": "Increases chain range significantly",
+        "tier": 2,
+        "cost": 300,
+        "requirements": ["electric_tier1"],
+        "statChanges": {
+          "range": 30
+        },
+        "specialChanges": {
+          "chainRange": 40
+        },
+        "nextUpgrades": ["electric_tier3_storm"],
+        "visualTier": 2
+      },
+      {
+        "id": "electric_tier2_chains",
+        "name": "Multi-Fork Lightning",
+        "description": "Chains to even more enemies",
+        "tier": 2,
+        "cost": 280,
+        "requirements": ["electric_tier1"],
+        "specialChanges": {
+          "maxChains": 6
+        },
+        "nextUpgrades": ["electric_tier3_storm"],
+        "visualTier": 2
+      },
+      {
+        "id": "electric_tier3_storm",
+        "name": "Lightning Storm",
+        "description": "Ultimate chain lightning power",
+        "tier": 3,
+        "cost": 600,
+        "requirements": ["electric_tier2_range", "electric_tier2_chains"],
+        "statChanges": {
+          "damage": 25,
+          "range": 40
+        },
+        "specialChanges": {
+          "maxChains": 8,
+          "chainRange": 60
+        },
+        "visualTier": 3
+      }
+    ],
+    "flamethrower": [
+      {
+        "id": "flame_tier1",
+        "name": "Fuel Upgrade",
+        "description": "Increases damage and cone length",
+        "tier": 1,
+        "cost": 120,
+        "requirements": [],
+        "statChanges": {
+          "damage": 3
+        },
+        "specialChanges": {
+          "coneLength": 20
+        },
+        "nextUpgrades": ["flame_tier2_width", "flame_tier2_damage"],
+        "visualTier": 1
+      },
+      {
+        "id": "flame_tier2_width",
+        "name": "Wide Spray",
+        "description": "Increases cone angle for wider coverage",
+        "tier": 2,
+        "cost": 250,
+        "requirements": ["flame_tier1"],
+        "specialChanges": {
+          "coneAngle": 30
+        },
+        "nextUpgrades": ["flame_tier3_inferno"],
+        "visualTier": 2
+      },
+      {
+        "id": "flame_tier2_damage",
+        "name": "Napalm Fuel",
+        "description": "Massively increases damage",
+        "tier": 2,
+        "cost": 280,
+        "requirements": ["flame_tier1"],
+        "statChanges": {
+          "damage": 7,
+          "fireRateMultiplier": 1.2
+        },
+        "nextUpgrades": ["flame_tier3_inferno"],
+        "visualTier": 2
+      },
+      {
+        "id": "flame_tier3_inferno",
+        "name": "Inferno Cannon",
+        "description": "Ultimate flamethrower upgrade",
+        "tier": 3,
+        "cost": 550,
+        "requirements": ["flame_tier2_width", "flame_tier2_damage"],
+        "statChanges": {
+          "damage": 10,
+          "fireRateMultiplier": 1.5
+        },
+        "specialChanges": {
+          "coneAngle": 40,
+          "coneLength": 40
+        },
+        "visualTier": 3
+      }
+    ],
+    "sniper": [
+      {
+        "id": "sniper_tier1",
+        "name": "Precision Scope",
+        "description": "Increases range and damage",
+        "tier": 1,
+        "cost": 200,
+        "requirements": [],
+        "statChanges": {
+          "damage": 25,
+          "range": 30
+        },
+        "nextUpgrades": ["sniper_tier2_damage", "sniper_tier2_pierce"],
+        "visualTier": 1
+      },
+      {
+        "id": "sniper_tier2_damage",
+        "name": "Armor-Piercing Rounds",
+        "description": "Massively increases damage",
+        "tier": 2,
+        "cost": 400,
+        "requirements": ["sniper_tier1"],
+        "statChanges": {
+          "damage": 50
+        },
+        "nextUpgrades": ["sniper_tier3_railgun"],
+        "visualTier": 2
+      },
+      {
+        "id": "sniper_tier2_pierce",
+        "name": "Penetrating Shot",
+        "description": "Increases piercing capability",
+        "tier": 2,
+        "cost": 350,
+        "requirements": ["sniper_tier1"],
+        "specialChanges": {
+          "piercing": 4
+        },
+        "nextUpgrades": ["sniper_tier3_railgun"],
+        "visualTier": 2
+      },
+      {
+        "id": "sniper_tier3_railgun",
+        "name": "Railgun",
+        "description": "Ultimate sniper tower",
+        "tier": 3,
+        "cost": 800,
+        "requirements": ["sniper_tier2_damage", "sniper_tier2_pierce"],
+        "statChanges": {
+          "damage": 150,
+          "range": 100,
+          "projectileSpeed": 500
+        },
+        "specialChanges": {
+          "piercing": 10
+        },
+        "visualTier": 3
+      }
+    ],
+    "rapid": [
+      {
+        "id": "rapid_tier1",
+        "name": "Improved Feed System",
+        "description": "Increases fire rate",
+        "tier": 1,
+        "cost": 150,
+        "requirements": [],
+        "statChanges": {
+          "fireRateMultiplier": 1.3
+        },
+        "nextUpgrades": ["rapid_tier2_speed", "rapid_tier2_damage"],
+        "visualTier": 1
+      },
+      {
+        "id": "rapid_tier2_speed",
+        "name": "Overclocked Mechanism",
+        "description": "Massive fire rate increase",
+        "tier": 2,
+        "cost": 300,
+        "requirements": ["rapid_tier1"],
+        "statChanges": {
+          "fireRateMultiplier": 1.5
+        },
+        "nextUpgrades": ["rapid_tier3_minigun"],
+        "visualTier": 2
+      },
+      {
+        "id": "rapid_tier2_damage",
+        "name": "Enhanced Ammunition",
+        "description": "Increases damage per shot",
+        "tier": 2,
+        "cost": 280,
+        "requirements": ["rapid_tier1"],
+        "statChanges": {
+          "damage": 5
+        },
+        "nextUpgrades": ["rapid_tier3_minigun"],
+        "visualTier": 2
+      },
+      {
+        "id": "rapid_tier3_minigun",
+        "name": "Minigun",
+        "description": "Insane fire rate with decent damage",
+        "tier": 3,
+        "cost": 600,
+        "requirements": ["rapid_tier2_speed", "rapid_tier2_damage"],
+        "statChanges": {
+          "damage": 8,
+          "fireRateMultiplier": 2.0
+        },
+        "visualTier": 3
+      }
+    ]
+  }
+}

@@ -2,12 +2,12 @@
  * Enemy States - For state machine
  */
 
-import { State } from '../../engine/state/StateMachine';
-import { Entity } from '../../engine/ecs/Entity';
-import { EnemyComponent } from '../components/EnemyComponent';
-import { PathFollowerComponent } from '../components/PathFollowerComponent';
-import { RenderableComponent } from '../../engine/components/RenderableComponent';
-import { StateMachineComponent } from '../../engine/components/StateMachineComponent';
+import { State } from '@raejuli/core-engine-gdk/state';
+import { Entity } from '@raejuli/core-engine-gdk/ecs';
+import { EnemyComponent } from '../components/enemy/EnemyComponent';
+import { PathFollowerComponent } from '../components/enemy/PathFollowerComponent';
+import { RenderableComponent } from '@raejuli/core-engine-gdk/components';
+import { StateMachineComponent } from '@raejuli/core-engine-gdk/components';
 
 export class EnemyMovingState extends State<Entity> {
   public onEnter(previousState?: State<Entity>): void {
@@ -31,11 +31,49 @@ export class EnemyDamagedState extends State<Entity> {
   public onEnter(previousState?: State<Entity>): void {
     this._damageFlashTime = 0;
     
+    // Update health bar
+    this.updateHealthBar();
+    
     // Visual feedback - flash red
     const renderable = this._context.getComponent('Renderable') as RenderableComponent;
     if (renderable && renderable.graphics) {
       renderable.graphics.tint = 0x00ff00; // Red tint
     }
+  }
+
+  private updateHealthBar(): void {
+    const enemy = this._context.getComponent('Enemy') as EnemyComponent;
+    const renderable = this._context.getComponent('Renderable') as RenderableComponent;
+    
+    if (!enemy || !renderable) return;
+
+    // Clear and redraw the entire enemy graphic
+    renderable.graphics.clear();
+    
+    const enemySize = 20;
+    const healthBarWidth = enemySize;
+    const healthBarHeight = 4;
+    const healthBarY = -5;
+    
+    // Draw enemy body (red circle)
+    renderable.graphics.circle(enemySize / 2, enemySize / 2, enemySize / 2);
+    renderable.graphics.fill({ color: 0xff0000 });
+    
+    // Draw health bar background (black)
+    renderable.graphics.rect(0, healthBarY, healthBarWidth, healthBarHeight);
+    renderable.graphics.fill({ color: 0x000000 });
+    
+    // Draw health bar foreground (green/yellow/red based on health)
+    const healthPercent = enemy.getHealthPercent();
+    let healthColor = 0x00ff00; // Green
+    if (healthPercent < 0.3) {
+      healthColor = 0xff0000; // Red
+    } else if (healthPercent < 0.6) {
+      healthColor = 0xffff00; // Yellow
+    }
+    
+    renderable.graphics.rect(0, healthBarY, healthBarWidth * healthPercent, healthBarHeight);
+    renderable.graphics.fill({ color: healthColor });
   }
 
   public onUpdate(deltaTime: number): void {

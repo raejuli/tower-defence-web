@@ -1,0 +1,241 @@
+/**
+ * TowerDetailsPanel Styles
+ */
+
+.tower-details-panel {
+  background: rgba(0, 0, 0, 0.9);
+  border-radius: 8px;
+  padding: 16px;
+  color: white;
+  font-family: Arial, sans-serif;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.tower-details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #666;
+  padding-bottom: 8px;
+}
+
+.tower-details-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.close-button {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.close-button:hover {
+  color: #f00;
+}
+
+.tower-details-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.component-section {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  padding: 12px;
+  border-left: 3px solid #4a9eff;
+}
+
+.component-title {
+  font-weight: bold;
+  color: #4a9eff;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.component-content {
+  color: #ddd;
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Upgrade Section Styles */
+.upgrade-section {
+  background: rgba(74, 158, 255, 0.1);
+  border-radius: 6px;
+  padding: 12px;
+  border: 1px solid rgba(74, 158, 255, 0.3);
+}
+
+.section-title {
+  font-weight: bold;
+  color: #4a9eff;
+  font-size: 14px;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.upgrades-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.upgrade-button {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(74, 158, 255, 0.5);
+  border-radius: 4px;
+  padding: 10px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.upgrade-button:hover:not(.disabled) {
+  background: rgba(74, 158, 255, 0.2);
+  transform: translateX(3px);
+  border-color: #4a9eff;
+}
+
+.upgrade-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.upgrade-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.upgrade-name {
+  font-weight: bold;
+  font-size: 13px;
+  color: #4a9eff;
+}
+
+.upgrade-tier {
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+
+.upgrade-tier.tier-1 {
+  background: rgba(76, 175, 80, 0.3);
+  color: #4caf50;
+}
+
+.upgrade-tier.tier-2 {
+  background: rgba(255, 152, 0, 0.3);
+  color: #ff9800;
+}
+
+.upgrade-tier.tier-3 {
+  background: rgba(156, 39, 176, 0.3);
+  color: #9c27b0;
+}
+
+.upgrade-description {
+  font-size: 11px;
+  color: #ccc;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.upgrade-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.upgrade-cost {
+  font-weight: bold;
+  color: #ffd700;
+  font-size: 12px;
+}
+
+.insufficient-funds {
+  font-size: 10px;
+  color: #ff5252;
+  font-style: italic;
+}
+
+.max-level-badge {
+  text-align: center;
+  font-weight: bold;
+  font-size: 14px;
+  color: #ffd700;
+  padding: 12px;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 140, 0, 0.2));
+  border-radius: 4px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Tower Actions Styles */
+.tower-actions {
+  margin-top: 8px;
+}
+
+.sell-button {
+  width: 100%;
+  background: linear-gradient(135deg, rgba(244, 67, 54, 0.2), rgba(211, 47, 47, 0.2));
+  border: 1px solid rgba(244, 67, 54, 0.5);
+  border-radius: 4px;
+  padding: 12px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: bold;
+}
+
+.sell-button:hover {
+  background: linear-gradient(135deg, rgba(244, 67, 54, 0.3), rgba(211, 47, 47, 0.3));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(244, 67, 54, 0.3);
+}
+
+.sell-icon {
+  font-size: 18px;
+}
+
+.sell-value {
+  color: #4caf50;
+  font-weight: bold;
+}
