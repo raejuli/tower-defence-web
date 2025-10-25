@@ -22,6 +22,7 @@ import { State } from '@raejuli/core-engine-gdk/state';
 import type { TowerDefenceGame } from '../../TowerDefenceGame';
 import { ServiceLocator } from '@raejuli/core-engine-gdk';
 import { UIService } from '../../services/UIService';
+import { EventBus } from '@raejuli/core-engine-gdk/events';
 
 export class GameOverState extends State<TowerDefenceGame> {
   private returnTimer: number = 0;
@@ -30,6 +31,7 @@ export class GameOverState extends State<TowerDefenceGame> {
   public onEnter(): void {
     console.log('💀 Game Over - Player has lost');
     const ui = ServiceLocator.get<UIService>('UI').ui;
+    const events = ServiceLocator.get<EventBus>('EventBus');
 
     this.returnTimer = 0;
 
@@ -52,8 +54,8 @@ export class GameOverState extends State<TowerDefenceGame> {
       isPaused: true
     });
 
-    // Listen for return to menu event
-    ui.on('returnToMenu', this._handleReturnToMenu);
+    // Listen for return to menu event (using EventBus directly)
+    events.on('ui:returnToMenu', this._handleReturnToMenu);
   }
 
   public onUpdate(deltaTime: number): void {
@@ -69,10 +71,11 @@ export class GameOverState extends State<TowerDefenceGame> {
 
   onExit(): void {
     const ui = ServiceLocator.get<UIService>('UI').ui;
+    const events = ServiceLocator.get<EventBus>('EventBus');
     console.log('💀 Exited Game Over State');
 
-    // Clean up UI event listeners
-    ui.off('returnToMenu', this._handleReturnToMenu);
+    // Clean up UI event listeners (using EventBus directly)
+    events.off('ui:returnToMenu', this._handleReturnToMenu);
 
     // Hide game over UI
     ui.setState({

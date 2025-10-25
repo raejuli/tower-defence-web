@@ -24,6 +24,7 @@ import { SceneRegistry } from '../scenes/SceneRegistry';
 import { SerializedScene } from '@raejuli/core-engine-gdk/serialization';
 import { ServiceLocator } from '@raejuli/core-engine-gdk';
 import { UIService } from '../services/UIService';
+import { EventBus } from '@raejuli/core-engine-gdk/events';
 
 export class SceneSelectState extends State<TowerDefenceGame> {
   private selectedSceneId: string | null = null;
@@ -32,6 +33,7 @@ export class SceneSelectState extends State<TowerDefenceGame> {
   onEnter(): void {
     console.log('🎬 Entered SceneSelectState');
     const ui = ServiceLocator.get<UIService>('UI').ui;
+    const events = ServiceLocator.get<EventBus>('EventBus');
 
     // Update UI to show scene selection screen
     ui.setState({
@@ -43,8 +45,8 @@ export class SceneSelectState extends State<TowerDefenceGame> {
       isPaused: false
     });
 
-    // Listen for scene selection events
-    ui.on('sceneSelected', this.handleSceneSelected);
+    // Listen for scene selection events (using EventBus directly)
+    events.on('ui:sceneSelected', this.handleSceneSelected);
 
     // RULE: Display all available scenes for selection
     this.displayScenes();
@@ -58,9 +60,10 @@ export class SceneSelectState extends State<TowerDefenceGame> {
   onExit(): void {
     console.log('🎬 Exited SceneSelectState');
     const ui = ServiceLocator.get<UIService>('UI').ui;
+    const events = ServiceLocator.get<EventBus>('EventBus');
 
-    // Clean up UI event listeners
-    ui.off('sceneSelected', this.handleSceneSelected);
+    // Clean up UI event listeners (using EventBus directly)
+    events.off('ui:sceneSelected', this.handleSceneSelected);
 
     // Hide scene selection UI
     ui.setState({
@@ -144,11 +147,16 @@ export class SceneSelectState extends State<TowerDefenceGame> {
     console.log(`✅ Scene selected: ${scene.metadata.name}`);
     this.selectedSceneId = sceneId;
 
-    // RULE: Load the selected scene into the game
-    this.loadScene(scene);
+    try {
+      // RULE: Load the selected scene into the game
+      this.loadScene(scene);
 
-    // RULE: Transition to placement state to start the game
-    this.context.gameStateMachine.setState('playing');
+      // RULE: Transition to playing state to start the game
+      console.log(`🎮 Transitioning to playing state...`);
+      this.context.gameStateMachine.setState('playing');
+    } catch (error) {
+      console.error(`❌ Error loading scene:`, error);
+    }
   };
 
   /**

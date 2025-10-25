@@ -297,11 +297,43 @@ export class WaveSpawnerWaitingState extends State<Entity> {
     const spawner = this.context.getComponent('WaveSpawner') as WaveSpawnerComponent;
     if (!spawner) return;
 
-    // When using WaveProgressionSystem, spawners should NOT auto-advance waves
-    // The WaveProgressionSystem manages wave transitions
-    // Spawners just wait in this state until they are reconfigured or disabled
+    const world = this.context.getWorld();
+    if (!world) return;
+
+    // Check if WaveProgressionComponent exists in the scene
+    const entities = world.getAllEntities();
+    const hasWaveProgression = entities.some(e => e.hasComponent('WaveProgression'));
     
-    // Just stay in waiting state - WaveProgressionSystem will handle next wave
+    if (hasWaveProgression) {
+      // When using WaveProgressionSystem, let that system handle wave transitions
+      // Spawners just wait in this state until they are reconfigured or disabled by the system
+      return;
+    }
+
+    // ORIGINAL WAVE SPAWNER BEHAVIOR (no WaveProgressionComponent)
+    // Check if all enemies are defeated
+    const activeEnemies = world.getEntitiesWithComponents(['Enemy']);
+    
+    if (activeEnemies.length === 0) {
+      console.log(`✅ [Spawner ${this.context.name}] All enemies defeated, checking for next wave`);
+      
+      // Check if there are more waves to spawn
+      if (spawner.currentWave < spawner.config.maxWaves) {
+        console.log(`🔄 [Spawner ${this.context.name}] Transitioning to idle for wave ${spawner.currentWave + 1}`);
+        // Transition back to idle to start the next wave
+        const stateMachine = this.context.getComponent('StateMachine') as StateMachineComponent;
+        if (stateMachine) {
+          stateMachine.stateMachine.setState('idle');
+        }
+      } else {
+        console.log(`🎉 [Spawner ${this.context.name}] All waves complete!`);
+        // All waves done, transition to complete
+        const stateMachine = this.context.getComponent('StateMachine') as StateMachineComponent;
+        if (stateMachine) {
+          stateMachine.stateMachine.setState('complete');
+        }
+      }
+    }
   }
 
   public onExit(): void {

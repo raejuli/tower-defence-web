@@ -373,6 +373,15 @@ export class WaveProgressionSystem extends System {
           stateMachine.stateMachine.setState('complete');
         }
       }
+      
+      // Check if ALL waves in the progression are complete (not just this wave)
+      if (progression.isComplete()) {
+        console.log(`🎉 All waves complete! Game should transition to victory.`);
+        // The game should now check for victory in PlayingState
+      } else {
+        console.log(`🔄 Wave ${this.currentWave} complete, preparing next wave...`);
+        // The next wave will be started in checkWaveTransition on the next update
+      }
     }
   }
 

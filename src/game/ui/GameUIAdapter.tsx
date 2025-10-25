@@ -24,6 +24,9 @@ export class GameUIAdapter {
   private events: EventBus;
   private onTowerUpgradeCallback?: (tower: Entity, upgradeId: string) => void;
   private onTowerSellCallback?: (tower: Entity) => void;
+  private resizeObserver?: ResizeObserver;
+  private readonly handleResizeListener = () => this.handleResize();
+  private resizeRaf: number | null = null;
   
   // Scaling properties (same as WorldEngine)
   private safeWidth: number = 1280;
@@ -62,8 +65,15 @@ export class GameUIAdapter {
     const parent = parentContainer || document.body;
     parent.appendChild(this.container);
 
+    const canvasParent = this.canvasElement.parentElement;
+    if (typeof ResizeObserver !== 'undefined' && canvasParent) {
+      this.resizeObserver = new ResizeObserver(() => this.handleResize());
+      this.resizeObserver.observe(canvasParent);
+    }
+
     // Set up resize handling (same as WorldEngine)
-    window.addEventListener('resize', () => this.handleResize());
+    window.addEventListener('resize', this.handleResizeListener);
+    window.addEventListener('orientationchange', this.handleResizeListener);
     this.handleResize();
 
     // Tower types
@@ -310,6 +320,14 @@ export class GameUIAdapter {
   }
 
   destroy(): void {
+    window.removeEventListener('resize', this.handleResizeListener);
+    window.removeEventListener('orientationchange', this.handleResizeListener);
+    if (this.resizeRaf !== null && typeof window !== 'undefined') {
+      window.cancelAnimationFrame(this.resizeRaf);
+      this.resizeRaf = null;
+    }
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = undefined;
     this.root.unmount();
     if (this.container.parentElement) {
       this.container.parentElement.removeChild(this.container);

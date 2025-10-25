@@ -198,8 +198,30 @@ export class PlayingState extends State<TowerDefenceGame> {
       return;
     }
 
-    // Victory is checked when wave:allComplete event is emitted
-    // See _checkWaveBasedVictory() method
+    // Check for victory condition
+    this._checkVictoryCondition();
+  }
+
+  /**
+   * RULE: Check victory condition for both wave systems
+   */
+  private _checkVictoryCondition(): void {
+    // Check if scene uses WaveProgressionComponent
+    const progressionEntities = this.context.world.getEntitiesWithComponents(['WaveProgression']);
+    
+    if (progressionEntities.length > 0) {
+      // Use WaveProgressionComponent victory check
+      const progression = progressionEntities[0].getComponent('WaveProgression') as any;
+      const activeEnemies = this.context.world.getEntitiesWithComponents(['Enemy']).length;
+      
+      if (progression && progression.isComplete() && activeEnemies === 0) {
+        console.log(`🎉 All waves in progression completed and no enemies remain! Victory!`);
+        this.context.gameStateMachine.setState('gameWin');
+      }
+    } else {
+      // Use original WaveSpawner victory check
+      this._checkWaveBasedVictory();
+    }
   }
 
   /**
