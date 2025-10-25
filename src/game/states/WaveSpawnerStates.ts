@@ -25,6 +25,7 @@ import {
   EnemyReachedEndState
 } from './EnemyStates';
 import { WaveSpawnerComponent } from '../components/enemy/WaveSpawnerComponent';
+import { EntityIdRegistry } from '../loaders/EntityIdRegistry';
 
 /**
  * Idle State - Waiting before starting the next wave
@@ -201,12 +202,8 @@ export class WaveSpawnerSpawningState extends State<Entity> {
 
     // Add path follower if path entity is specified
     if (spawner.config.pathEntityId) {
-      // pathEntityId should now be the numeric entity ID (updated by SceneLoader)
-      const pathEntityId = typeof spawner.config.pathEntityId === 'string' 
-        ? Number(spawner.config.pathEntityId) 
-        : spawner.config.pathEntityId;
-      
-      const pathEntity = world.getEntity(pathEntityId);
+      // Look up the path entity by its JSON string ID
+      const pathEntity = EntityIdRegistry.getEntity(spawner.config.pathEntityId);
       
       if (pathEntity) {
         const pathFollower = new PathFollowerComponent(
@@ -214,10 +211,10 @@ export class WaveSpawnerSpawningState extends State<Entity> {
           enemyStats.speed
         );
         enemy.addComponent(pathFollower);
-        console.log(`  🔗 Enemy linked to path entity ID ${pathEntity.id}`);
+        console.log(`  🔗 Enemy linked to path "${spawner.config.pathEntityId}" (entity #${pathEntity.id})`);
       } else {
-        console.error(`  ❌ Path entity not found! ID: ${pathEntityId}`);
-        console.error(`  Available entities:`, world.getAllEntities().map(e => `${e.id}: ${e.name}`));
+        console.error(`  ❌ Path entity not found! JSON ID: "${spawner.config.pathEntityId}"`);
+        console.error(`  Available JSON IDs:`, EntityIdRegistry.getAllIds());
       }
     }
 

@@ -25,8 +25,8 @@ export interface WaveConfiguration {
   enemyDamage: number;
   enemyReward: number;
   
-  // Optional: Path entity ID for enemies to follow (string from JSON, number at runtime)
-  pathEntityId?: string | number;
+  // Path entity ID from JSON (string ID that can be looked up via EntityIdRegistry)
+  pathEntityId?: string;
 }
 
 /**

@@ -195,14 +195,12 @@ export class WaveProgressionSystem extends System {
     const enemyType = progression.getEnemyType(spawnerConfig.enemyType) || 
                      progression.getEnemyType(progression.defaultEnemyType)!;
 
-    // Find the path entity by its JSON ID
+    // Verify path entity exists
     const pathEntity = this.findPathEntity(spawnerConfig.pathId);
-    const pathEntityId = pathEntity ? pathEntity.id : spawnerConfig.pathId;
-
     if (!pathEntity) {
       console.error(`  ❌ Path entity "${spawnerConfig.pathId}" not found!`);
     } else {
-      console.log(`  🔗 Linked spawner to path entity ID ${pathEntity.id} (${pathEntity.name})`);
+      console.log(`  🔗 Spawner uses path "${spawnerConfig.pathId}" (${pathEntity.name})`);
     }
 
     const spawner = new WaveSpawnerComponent({
@@ -215,7 +213,7 @@ export class WaveProgressionSystem extends System {
       enemySpeed: enemyType.speed,
       enemyDamage: enemyType.damage,
       enemyReward: enemyType.reward,
-      pathEntityId: pathEntityId  // Use numeric ID
+      pathEntityId: spawnerConfig.pathId  // Keep as JSON string ID
     });
     entity.addComponent(spawner);
 
@@ -248,11 +246,10 @@ export class WaveProgressionSystem extends System {
     const enemyType = progression.getEnemyType(spawnerConfig.enemyType) ||
                      progression.getEnemyType(progression.defaultEnemyType)!;
 
-    // Find the path entity by its JSON ID
+    // Verify path entity exists
     const pathEntity = this.findPathEntity(spawnerConfig.pathId);
-    const pathEntityId = pathEntity ? pathEntity.id : spawnerConfig.pathId;
 
-    // Update spawner configuration
+    // Update spawner configuration (preserving JSON string IDs)
     (spawner.config as any).enemiesPerWave = spawnerConfig.enemyCount;
     (spawner.config as any).spawnInterval = spawnerConfig.spawnInterval;
     (spawner.config as any).idleDuration = waveConfig.idleDuration;
@@ -261,7 +258,7 @@ export class WaveProgressionSystem extends System {
     (spawner.config as any).enemySpeed = enemyType.speed;
     (spawner.config as any).enemyDamage = enemyType.damage;
     (spawner.config as any).enemyReward = enemyType.reward;
-    (spawner.config as any).pathEntityId = pathEntityId; // Use numeric ID
+    (spawner.config as any).pathEntityId = spawnerConfig.pathId; // Keep as JSON string ID
 
     // Reset spawner state for new wave
     spawner.enemiesSpawnedThisWave = 0;

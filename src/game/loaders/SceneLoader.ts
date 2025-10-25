@@ -48,21 +48,18 @@ export class SceneLoader {
       }
     }
     
-    // Second pass: Update spawner references to use actual entity IDs
+    // Second pass: Initialize spawner state machines
     for (const entityData of serialized.entities) {
       if (entityData.type === 'spawner') {
         const spawnerEntity = entityIdMap.get(entityData.id);
         if (!spawnerEntity) continue;
         
-        // Get the WaveSpawner component
+        // Verify path entity exists (pathEntityId is kept as JSON string)
         const spawnerComp = spawnerEntity.getComponent('WaveSpawner');
         if (spawnerComp && spawnerComp.config.pathEntityId) {
-          // Find the actual path entity
           const pathEntity = entityIdMap.get(spawnerComp.config.pathEntityId);
           if (pathEntity) {
-            // Update the config to use the numeric entity ID
-            spawnerComp.config.pathEntityId = pathEntity.id;
-            console.log(`  🔗 Linked spawner "${spawnerEntity.name}" to path entity ID ${pathEntity.id}`);
+            console.log(`  🔗 Spawner "${spawnerEntity.name}" uses path "${spawnerComp.config.pathEntityId}"`);
           } else {
             console.error(`  ❌ Path entity "${spawnerComp.config.pathEntityId}" not found for spawner "${spawnerEntity.name}"`);
           }
