@@ -134,12 +134,12 @@ export class TowerDefenceGame {
     ServiceLocator.register('TowerService', towerService);
 
     // Register placement service (needs stage from app)
-    const placementService = new PlacementService(this.app.stage);
+    const placementService = new PlacementService(this.engine.stage);
     ServiceLocator.register('PlacementService', placementService);
   }
 
   private _addSystems(): void {
-    this.world.addSystem(new RenderSystem(this.world, this.app.stage));
+    this.world.addSystem(new RenderSystem(this.world, this.engine.stage));
     this.world.addSystem(new ClickHandlerSystem(this.world, this.engine.input));
     this.world.addSystem(new StateMachineSystem(this.world));
     this.world.addSystem(new WaveProgressionSystem(this.world));

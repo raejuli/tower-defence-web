@@ -24,6 +24,17 @@ export class GameUIAdapter {
   private events: EventBus;
   private onTowerUpgradeCallback?: (tower: Entity, upgradeId: string) => void;
   private onTowerSellCallback?: (tower: Entity) => void;
+  
+  // Scaling properties (same as WorldEngine)
+  private safeWidth: number = 1280;
+  private safeHeight: number = 960;
+  private maxWidth: number = 1920;
+  private maxHeight: number = 1080;
+  
+  // Current scale and offset for coordinate transformation
+  private currentScale: number = 1;
+  private currentOffsetX: number = 0;
+  private currentOffsetY: number = 0;
 
   constructor(canvasElement: HTMLCanvasElement, parentContainer?: HTMLElement) {
     // Get global event bus from ServiceLocator
@@ -35,12 +46,9 @@ export class GameUIAdapter {
     this.container = document.createElement('div');
     this.container.id = 'game-ui-root';
     this.container.style.position = 'absolute';
-    this.container.style.top = '0';
-    this.container.style.left = '0';
-    this.container.style.width = '100%';
-    this.container.style.height = '100%';
     this.container.style.pointerEvents = 'none';
     this.container.style.zIndex = '100';
+    this.container.style.transformOrigin = 'top left';
 
     // Make children receive pointer events
     const style = document.createElement('style');
@@ -53,6 +61,10 @@ export class GameUIAdapter {
 
     const parent = parentContainer || document.body;
     parent.appendChild(this.container);
+
+    // Set up resize handling (same as WorldEngine)
+    window.addEventListener('resize', () => this.handleResize());
+    this.handleResize();
 
     // Tower types
     this.towerTypes = new Map([
@@ -135,6 +147,11 @@ export class GameUIAdapter {
       React.createElement(GameUIComponent, {
         ref: this.uiRef,
         canvasRef,
+        coordinateTransform: {
+          scale: this.currentScale,
+          offsetX: this.currentOffsetX,
+          offsetY: this.currentOffsetY
+        },
         onTowerPlacementRequested: (data: any) => this.events.emit('ui:towerPlacementRequested', data),
         onTowerSelected: (data: any) => this.events.emit('ui:towerSelected', data),
         onPlacementCancelled: () => this.events.emit('ui:placementCancelled', {}),
@@ -191,6 +208,57 @@ export class GameUIAdapter {
     // Prefix with ui: if not already prefixed
     const eventName = event.startsWith('ui:') ? event : `ui:${event}`;
     this.events.off<T>(eventName, callback);
+  }
+
+  /**
+   * Handle window resize - scales and centers the UI (same logic as WorldEngine)
+   */
+  private handleResize(): void {
+    if (!this.canvasElement.parentElement) return;
+    
+    const parent = this.canvasElement.parentElement;
+    const containerWidth = parent.clientWidth;
+    const containerHeight = parent.clientHeight;
+    
+    if (containerWidth <= 0 || containerHeight <= 0) return;
+
+    // Calculate scale to fit safe area
+    const scaleX = containerWidth / this.safeWidth;
+    const scaleY = containerHeight / this.safeHeight;
+    const scale = Math.min(scaleX, scaleY, 1);
+
+    // Calculate visible area (overdraw)
+    const visibleWidth = Math.min(containerWidth / scale, this.maxWidth);
+    const visibleHeight = Math.min(containerHeight / scale, this.maxHeight);
+
+    // Calculate root offset (same as WorldEngine)
+    const rootOffsetX = (containerWidth - visibleWidth * scale) / 2;
+    const rootOffsetY = (containerHeight - visibleHeight * scale) / 2;
+    
+    // Calculate stage offset within visible area (same as WorldEngine)
+    const stageOffsetX = (visibleWidth - this.safeWidth) / 2;
+    const stageOffsetY = (visibleHeight - this.safeHeight) / 2;
+    
+    // Total offset = root offset + stage offset * scale
+    const totalOffsetX = rootOffsetX + stageOffsetX * scale;
+    const totalOffsetY = rootOffsetY + stageOffsetY * scale;
+
+    // Store current transformation
+    this.currentScale = scale;
+    this.currentOffsetX = totalOffsetX;
+    this.currentOffsetY = totalOffsetY;
+
+    // Set UI container dimensions to safe area
+    this.container.style.width = `${this.safeWidth}px`;
+    this.container.style.height = `${this.safeHeight}px`;
+
+    // Apply the same scale and position as WorldEngine root
+    this.container.style.transform = `scale(${scale})`;
+    this.container.style.left = `${rootOffsetX + stageOffsetX * scale}px`;
+    this.container.style.top = `${rootOffsetY + stageOffsetY * scale}px`;
+
+    // Re-render with updated coordinate transform
+    this.render();
   }
 
   setState(state: Partial<GameUIState>): void {

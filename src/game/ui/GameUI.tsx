@@ -57,6 +57,7 @@ export interface GameUIProps {
   onTowerUpgrade?: (tower: Entity, upgradeId: string) => void;
   onTowerSell?: (tower: Entity) => void;
   canvasRef?: React.RefObject<HTMLCanvasElement>;
+  coordinateTransform?: { scale: number; offsetX: number; offsetY: number };
 }
 
 const GameUIComponent = forwardRef<GameUIHandle, GameUIProps>((props, ref) => {
@@ -70,7 +71,8 @@ const GameUIComponent = forwardRef<GameUIHandle, GameUIProps>((props, ref) => {
     onReady,
     onTowerUpgrade,
     onTowerSell,
-    canvasRef
+    canvasRef,
+    coordinateTransform
   } = props;
 
   // State
@@ -198,8 +200,14 @@ const GameUIComponent = forwardRef<GameUIHandle, GameUIProps>((props, ref) => {
     if (!state.isPlacementMode || !selectedTowerType || !canvasRef?.current) return;
 
     const rect = canvasRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    let x = e.clientX - rect.left;
+    let y = e.clientY - rect.top;
+
+    // Apply coordinate transformation if provided
+    if (coordinateTransform) {
+      x = (x - coordinateTransform.offsetX) / coordinateTransform.scale;
+      y = (y - coordinateTransform.offsetY) / coordinateTransform.scale;
+    }
 
     if (onTowerPlacementRequested) {
       onTowerPlacementRequested({
@@ -208,7 +216,7 @@ const GameUIComponent = forwardRef<GameUIHandle, GameUIProps>((props, ref) => {
         y
       });
     }
-  }, [state.isPlacementMode, selectedTowerType, canvasRef, onTowerPlacementRequested]);
+  }, [state.isPlacementMode, selectedTowerType, canvasRef, onTowerPlacementRequested, coordinateTransform]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!canvasRef?.current) return;
@@ -269,7 +277,7 @@ const GameUIComponent = forwardRef<GameUIHandle, GameUIProps>((props, ref) => {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [handleCancelPlacement, towerDetailsEntity, handleTowerDetailsClose, enemyDetailsEntity, handleEnemyDetailsClose]);
+  }, [handleCancelPlacement, towerDetailsEntity, handleTowerDetailsClose, enemyDetailsEntity, handleEnemyDetailsClose, state.isPlacementMode]);
 
   // Notify when component is ready
   React.useEffect(() => {
@@ -336,7 +344,7 @@ const GameUIComponent = forwardRef<GameUIHandle, GameUIProps>((props, ref) => {
             width: '100%',
             height: '100%',
             pointerEvents: 'all',
-            zIndex: 50
+            zIndex: 10
           }}
           onClick={handleCanvasClick as any}
           onMouseMove={handleMouseMove as any}
@@ -345,7 +353,7 @@ const GameUIComponent = forwardRef<GameUIHandle, GameUIProps>((props, ref) => {
 
       {/* HUD */}
       {!state.isSceneSelect && (
-        <div style={{ position: 'absolute', top: '10px', left: '10px', width: '250px' }}>
+        <div style={{ position: 'absolute', top: '10px', left: '10px', width: '250px', zIndex: 100 }}>
           <HUD
             money={state.money}
             lives={state.lives}
@@ -357,7 +365,7 @@ const GameUIComponent = forwardRef<GameUIHandle, GameUIProps>((props, ref) => {
 
       {/* Shop */}
       {!state.isSceneSelect && !state.isGameOver && !state.isGameWin && (
-        <div style={{ position: 'absolute', top: '150px', left: '10px', width: '250px' }}>
+        <div style={{ position: 'absolute', top: '150px', left: '10px', width: '250px', zIndex: 100 }}>
           <Shop
             towerTypes={towerTypes}
             money={state.money}

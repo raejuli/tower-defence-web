@@ -128,7 +128,10 @@ export class PlacementState extends State<TowerDefenceGame> {
    * PLACEMENT REQUEST HANDLER
    * This is called when the player clicks to place a tower
    */
-  public handlePlacementRequest(towerType: string, x: number, y: number): void {
+  public handlePlacementRequest(towerType: string, _x: number, _y: number): void {
+    // Always trust the engine's input manager for final placement coordinates
+    const { x: pointerX, y: pointerY } = this._context.input.getMousePosition();
+
     const ui = ServiceLocator.get<UIService>('UI').ui;
     const towerData = ui.towerTypes.get(towerType);
     if (!towerData) {
@@ -141,7 +144,7 @@ export class PlacementState extends State<TowerDefenceGame> {
     // GAME RULE: Can't place on path or on other towers
     // ============================================================
     const towerService = ServiceLocator.get<ITowerService>('TowerService');
-    if (!towerService.canPlaceTower(x, y)) {
+    if (!towerService.canPlaceTower(pointerX, pointerY)) {
       console.log('❌ Cannot place tower here!');
       return;
     }
@@ -159,7 +162,7 @@ export class PlacementState extends State<TowerDefenceGame> {
     // ============================================================
     // RULE 3: Create tower entity and add to game using TowerService
     // ============================================================
-    towerService.createAndPlaceTower(x, y, towerType, towerData);
+  towerService.createAndPlaceTower(pointerX, pointerY, towerType, towerData);
 
     // ============================================================
     // RULE 4: Exit placement mode after successful placement
