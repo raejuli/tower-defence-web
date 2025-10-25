@@ -147,7 +147,11 @@ export class TowerDefenceGame {
     this.world.addSystem(new FlamethrowerSystem(this.world));
     this.world.addSystem(new ProjectileSystem(this.world));
     this.world.addSystem(new PathFollowingSystem(this.world));
-    this.world.addSystem(new TowerSelectionSystem(this.world));
+    
+    const towerSelectionSystem = new TowerSelectionSystem(this.world);
+    towerSelectionSystem.setStage(this.engine.stage);
+    this.world.addSystem(towerSelectionSystem);
+    
     this.world.addSystem(new TowerUpgradeSystem(this.world));
   }
 
