@@ -18,17 +18,15 @@
   ],
   "author": "",
   "license": "MIT",
-  "dependencies": {
-    "@raejuli/core-engine-gdk": "0.2.0"
-  },
   "devDependencies": {
+    "@raejuli/core-engine-gdk": "^0.3.0",
     "@types/node": "^20.0.0",
-    "pixi.js": "^8.0.0",
-    "typescript": "^5.3.0",
-    "vite": "^7.1.11",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
+    "pixi.js": "^8.0.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "typescript": "^5.3.0",
+    "vite": "^7.1.11"
   }
 }
